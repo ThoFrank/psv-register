@@ -1,0 +1,33 @@
+[package]
+version = "0.1.0"
+name = "frontend"
+repository = "https://github.com/seed-rs/seed-quickstart"
+authors = ["ThoFrank <thomas@franks-im-web.de>"]
+description = "App Description"
+categories = ["category"]
+license = "MIT"
+readme = "./README.md"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.18"
+
+[dependencies]
+chrono = "0.4.23"
+seed = "0.9.1"
+# shared = {path = "../shared"}
+serde = "1.0.137"
+# static_init = {version = "1.0.3", default-features = false, features = ["spin_loop"]}
+lazy_static = "1.4"
+email_address = "0.2.4"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+codegen-units = 1
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Os']
