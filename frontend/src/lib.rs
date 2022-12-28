@@ -9,7 +9,6 @@ lazy_static! {
     pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2023, 01, 01).unwrap();
 }
 
-#[derive(Default)]
 struct Model {
     first_name: String,
     last_name: String,
@@ -18,8 +17,8 @@ struct Model {
     bow_type: BowType,
     cls: Class,
 
-    // optional fields
-    target_face: TargetFace,
+    possible_target_faces: Vec<TargetFace>,
+    selected_target_face: TargetFace,
 }
 
 impl Model {
@@ -56,18 +55,12 @@ impl Model {
         orders.force_render_now();
     }
     fn update_target_face(&mut self) {
-        let choosing_classes = [
-            Class::R10,
-            Class::R11,
-            Class::R40,
-            Class::R41,
-            Class::R12,
-            Class::R13,
-        ];
-        match (choosing_classes.contains(&self.cls), self.target_face) {
-            (true, TargetFace::NotApplicaple) => self.target_face = TargetFace::Full,
-            (true, _) => (),
-            (false, _) => self.target_face = TargetFace::NotApplicaple,
+        self.possible_target_faces = TargetFace::for_cls(self.cls).to_owned();
+        if !self
+            .possible_target_faces
+            .contains(&self.selected_target_face)
+        {
+            self.selected_target_face = self.possible_target_faces[0];
         }
     }
 }
@@ -122,12 +115,43 @@ impl Default for BowType {
     }
 }
 
-#[derive(Default, Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TargetFace {
-    #[default]
-    NotApplicaple,
-    Full,
     Spot,
+    Cm40,
+    Cm60,
+    Cm80,
+    Cm122,
+}
+
+impl TargetFace {
+    fn for_cls(cls: Class) -> &'static [TargetFace] {
+        use Class::*;
+        use TargetFace::*;
+        match cls {
+            C10 | C11 | C30 | C40 | C12 | C13 | C14 => &[Spot],
+            R10 | R11 | R40 | R41 | R12 | R13 => &[Spot, Cm40],
+            R30 | R31 | R14 | R15 | B10 | B11 | B12 | B30 => &[Cm40],
+            R20 | R21 | B20 | C20 | OO => &[Cm60],
+            R22 | R23 => &[Cm80],
+        }
+    }
+}
+
+impl Display for TargetFace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                TargetFace::Spot => "Spot",
+                TargetFace::Cm40 => "40cm",
+                TargetFace::Cm60 => "60cm",
+                TargetFace::Cm80 => "80cm",
+                TargetFace::Cm122 => "122cm",
+            }
+        )
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -149,31 +173,16 @@ enum Class {
     B10,
     B11,
     B20,
-    B21,
-    B22,
-    B23,
     B30,
-    B31,
-    B40,
-    B41,
     B12,
-    B13,
-    B14,
-    B15,
     C10,
     C11,
     C20,
-    C21,
-    C22,
-    C23,
     C30,
-    C31,
     C40,
-    C41,
     C12,
     C13,
     C14,
-    C15,
     OO,
 }
 
@@ -196,32 +205,17 @@ impl Class {
             Class::R15 => "Recurve Senioren w",
             Class::B10 => "Blank Herren",
             Class::B11 => "Blank Damen",
-            Class::B20 => "Blank Schüler A m",
-            Class::B21 => "Blank Schüler A w",
-            Class::B22 => "Blank Schüler B m",
-            Class::B23 => "Blank Schüler B w",
-            Class::B30 => "Blank Jugend m",
-            Class::B31 => "Blank Jugend w",
-            Class::B40 => "Blank Junioren m",
-            Class::B41 => "Blank Junioren w",
+            Class::B20 => "Blank Schüler m/w",
+            Class::B30 => "Blank Jugend m/m",
             Class::B12 => "Blank Master m",
-            Class::B13 => "Blank Master w",
-            Class::B14 => "Blank Senioren m",
-            Class::B15 => "Blank Senioren w",
             Class::C10 => "Compound Herren",
             Class::C11 => "Compound Damen",
-            Class::C20 => "Compound Schüler A m",
-            Class::C21 => "Compound Schüler A w",
-            Class::C22 => "Compound Schüler B m",
-            Class::C23 => "Compound Schüler B w",
-            Class::C30 => "Compound Jugend m",
-            Class::C31 => "Compound Jugend w",
-            Class::C40 => "Compound Junioren m",
-            Class::C41 => "Compound Junioren w",
+            Class::C20 => "Compound Schüler m/w",
+            Class::C30 => "Compound Jugend m/m",
+            Class::C40 => "Compound Junioren m/w",
             Class::C12 => "Compound Master m",
             Class::C13 => "Compound Master w",
             Class::C14 => "Compound Senioren m",
-            Class::C15 => "Compound Senioren w",
             Class::OO => "Offene Klasse",
         }
     }
@@ -255,17 +249,8 @@ impl Class {
             Self::B10,
             Self::B11,
             Self::B20,
-            Self::B21,
-            Self::B22,
-            Self::B23,
             Self::B30,
-            Self::B31,
-            Self::B40,
-            Self::B41,
             Self::B12,
-            Self::B13,
-            Self::B14,
-            Self::B15,
             Self::OO,
         ]
     }
@@ -274,17 +259,11 @@ impl Class {
             Self::C10,
             Self::C11,
             Self::C20,
-            Self::C21,
-            Self::C22,
-            Self::C23,
             Self::C30,
-            Self::C31,
             Self::C40,
-            Self::C41,
             Self::C12,
             Self::C13,
             Self::C14,
-            Self::C15,
             Self::OO,
         ]
     }
@@ -306,32 +285,17 @@ impl Class {
             Class::R15 => (66, 120),
             Class::C10 => (21, 49),
             Class::C11 => (21, 49),
-            Class::C20 => (13, 14),
-            Class::C21 => (13, 14),
-            Class::C22 => (11, 12),
-            Class::C23 => (11, 12),
+            Class::C20 => (1, 14),
             Class::C30 => (15, 17),
-            Class::C31 => (15, 17),
             Class::C40 => (18, 20),
-            Class::C41 => (18, 20),
             Class::C12 => (50, 65),
-            Class::C13 => (50, 65),
+            Class::C13 => (50, 120),
             Class::C14 => (66, 120),
-            Class::C15 => (66, 120),
             Class::B10 => (21, 49),
-            Class::B11 => (21, 49),
-            Class::B20 => (13, 14),
-            Class::B21 => (13, 14),
-            Class::B22 => (11, 12),
-            Class::B23 => (11, 12),
-            Class::B30 => (15, 17),
-            Class::B31 => (15, 17),
-            Class::B40 => (18, 20),
-            Class::B41 => (18, 20),
-            Class::B12 => (50, 65),
-            Class::B13 => (50, 65),
-            Class::B14 => (66, 120),
-            Class::B15 => (66, 120),
+            Class::B11 => (21, 120),
+            Class::B20 => (1, 14),
+            Class::B30 => (15, 20),
+            Class::B12 => (50, 120),
             Class::OO => (15, 120),
         };
 
@@ -368,9 +332,16 @@ fn test_in_range() {
 }
 
 fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
+    let cls = Class::R12;
     Model {
-        target_face: TargetFace::Full,
-        ..Default::default()
+        first_name: String::new(),
+        last_name: String::new(),
+        date_of_birth: NaiveDate::default(),
+        mail: InsertedMail::Invalid(String::new()),
+        bow_type: BowType::Recurve,
+        cls,
+        possible_target_faces: TargetFace::for_cls(cls).to_owned(),
+        selected_target_face: TargetFace::for_cls(cls)[0],
     }
 }
 
@@ -417,7 +388,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::TargetFaceChanged(tf) => {
             seed::log!("Selected target", tf);
-            model.target_face = tf;
+            model.selected_target_face = tf;
         }
     }
 }
@@ -521,30 +492,14 @@ fn view(model: &Model) -> Node<Msg> {
         ),
         li!(em!(model.cls.comment())),
         li!(br!()),
-        IF!(!matches!(model.target_face, TargetFace::NotApplicaple) => li!("Auflage:")),
-        IF!(!matches!(model.target_face, TargetFace::NotApplicaple) => li!(
-            input!(
-                attrs!(At::Type => "radio", At::Name => "target_face", At::Id => "40"),
-                if matches!(model.target_face, TargetFace::Full) {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, |_| Msg::TargetFaceChanged(TargetFace::Full))
-            ),
-            label!("40er", attrs!(At::For => "40")),
-            input!(
-                attrs!(At::Type => "radio", At::Name => "target_face", At::Id => "Spot"),
-                if matches!(model.target_face, TargetFace::Spot) {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, |_| Msg::TargetFaceChanged(TargetFace::Spot))
-            ),
-            label!("Spot", attrs!(At::For => "Spot")),
+        li!("Auflage:"),
+        li!(
+            model.possible_target_faces.iter().map(|&tf| div![
+                input!(attrs!(At::Type => "radio", At::Name => "target_face"), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),
+                label!(format!("{}", tf), attrs!(At::For => format!("{}", tf)))
+            ]),
 
-        )),
+        ),
         li!(br!()),
         li!(button!("Anmelden", IF!(model.first_name.is_empty()||model.last_name.is_empty()|| !model.mail.is_valid() => attrs!(At::Disabled => AtValue::None))))
     ]
