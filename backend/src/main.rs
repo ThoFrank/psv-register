@@ -38,8 +38,10 @@ async fn handler(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
 async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
     let req = Request::builder().uri(uri).body(Body::empty()).unwrap();
 
+    let html_path = std::env::var("WEBPAGE").unwrap_or("../frontend/dist".to_string());
+
     // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`
-    match ServeDir::new("../frontend/dist").oneshot(req).await {
+    match ServeDir::new(html_path).oneshot(req).await {
         Ok(res) => Ok(res.map(boxed)),
         Err(err) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,

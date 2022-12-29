@@ -15,7 +15,7 @@ struct Model {
     date_of_birth: NaiveDate,
     mail: InsertedMail,
     bow_type: BowType,
-    cls: Class,
+    cls: Option<Class>,
 
     possible_target_faces: Vec<TargetFace>,
     selected_target_face: TargetFace,
@@ -23,7 +23,7 @@ struct Model {
 
 impl Model {
     fn check_and_update_cls(&mut self, orders: &mut impl Orders<Msg>) {
-        let new_cls: Vec<Class> = match self.bow_type {
+        let available_classes: Vec<Class> = match self.bow_type {
             BowType::Recurve => Class::recurve_classes(),
             BowType::Compound => Class::compound_classes(),
             BowType::Barebow => Class::barebow_classes(),
@@ -32,35 +32,38 @@ impl Model {
         .filter(|cls| cls.in_range(self.date_of_birth))
         .copied()
         .collect();
-        let new_cls = if new_cls.contains(&self.cls) {
-            self.cls
-        } else {
-            new_cls.get(0).unwrap_or(&Class::OO).clone()
+
+        let new_cls = match (self.cls, available_classes.get(0)) {
+            (Some(cls), Some(&new)) => {
+                if available_classes.contains(&cls) {
+                    return;
+                } else {
+                    Some(new)
+                }
+            }
+            (_, None) => None,
+            (None, Some(&new)) => Some(new),
         };
 
         self.update_target_face();
-
-        if self.cls.in_range(self.date_of_birth)
-            && match self.bow_type {
-                BowType::Recurve => Class::recurve_classes(),
-                BowType::Compound => Class::compound_classes(),
-                BowType::Barebow => Class::barebow_classes(),
-            }
-            .contains(&self.cls)
-        {
-            return;
-        }
 
         orders.send_msg(Msg::ClassChanged(new_cls));
         orders.force_render_now();
     }
     fn update_target_face(&mut self) {
-        self.possible_target_faces = TargetFace::for_cls(self.cls).to_owned();
+        self.possible_target_faces = if let Some(cls) = self.cls {
+            TargetFace::for_cls(cls).to_owned()
+        } else {
+            Vec::new()
+        };
         if !self
             .possible_target_faces
             .contains(&self.selected_target_face)
         {
-            self.selected_target_face = self.possible_target_faces[0];
+            self.selected_target_face = *self
+                .possible_target_faces
+                .get(0)
+                .unwrap_or(&TargetFace::Cm40);
         }
     }
 }
@@ -339,7 +342,7 @@ fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
         date_of_birth: NaiveDate::default(),
         mail: InsertedMail::Invalid(String::new()),
         bow_type: BowType::Recurve,
-        cls,
+        cls: Some(cls),
         possible_target_faces: TargetFace::for_cls(cls).to_owned(),
         selected_target_face: TargetFace::for_cls(cls)[0],
     }
@@ -351,7 +354,7 @@ enum Msg {
     DateOfBirthChanged(String),
     MailChanged(String),
     BowTypeChange(BowType),
-    ClassChanged(Class),
+    ClassChanged(Option<Class>),
     TargetFaceChanged(TargetFace),
 }
 
@@ -382,7 +385,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             model.check_and_update_cls(orders);
         }
         Msg::ClassChanged(cls) => {
-            seed::log!("Selected cls", cls.name());
+            seed::log!("Selected cls", cls.map(|cls| cls.name()));
             model.cls = cls;
             model.update_target_face();
         }
@@ -462,9 +465,10 @@ fn view(model: &Model) -> Node<Msg> {
         li!(br!()),
         li!("Klasse:"),
         li!(
-            attrs!(At::Name => "fcls"),
+            attrs!(At::Name => "cls"),
             select!(
-                attrs!(At::Name => "Class",At::AutoComplete => "off", At::Value => model.cls.name(), At::Required => AtValue::None),
+                attrs!(At::Name => "Class",At::AutoComplete => "off", At::Required => AtValue::None),
+                model.cls.map(|cls| attrs!(At::Value => cls.name())),
                 match model.bow_type {
                     BowType::Recurve => Class::recurve_classes(),
                     BowType::Compound => Class::compound_classes(),
@@ -475,22 +479,22 @@ fn view(model: &Model) -> Node<Msg> {
                 .map(|cls| option!(
                     cls.name(),
                     attrs!(At::Value => cls.name()),
-                    IF!(*cls == model.cls => attrs!(At::Selected => AtValue::None)),
-                    ev(Ev::Input, |_| { Msg::ClassChanged(*cls) })
+                    IF!(Some(*cls) == model.cls => attrs!(At::Selected => AtValue::None)),
+                    ev(Ev::Input, |_| { Msg::ClassChanged(Some(*cls)) })
                 ))
                 .collect::<Vec<_>>(),
                 input_ev(Ev::Input, move |cls_name| {
                     Msg::ClassChanged(
-                        Class::classes_for(dob, bow_type)
+                        Some(Class::classes_for(dob, bow_type)
                             .into_iter()
                             .filter(|cls| cls.name() == cls_name)
                             .next()
-                            .unwrap(),
+                            .unwrap()),
                     )
                 })
             )
         ),
-        li!(em!(model.cls.comment())),
+        li!(em!(model.cls.map(|cls| cls.comment()))),
         li!(br!()),
         li!("Auflage:"),
         li!(

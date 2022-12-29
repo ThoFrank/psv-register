@@ -34,9 +34,9 @@
            pkgs.sqlite.dev
         ];
       };
-      packages = {
+      packages = rec {
         frontend = import ./frontend.nix {inherit pkgs;};
-        backend = import ./server.nix {inherit pkgs;};
+        backend = import ./server.nix {inherit pkgs frontend;};
       };
       defaultPackage = packages.backend;
     });
