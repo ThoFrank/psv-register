@@ -35,8 +35,8 @@
         ];
       };
       packages = rec {
-        frontend = import ./frontend.nix {inherit pkgs;};
-        backend = import ./server.nix {inherit pkgs frontend;};
+        frontend = import nix/frontend.nix {inherit pkgs;};
+        backend = import nix/backend.nix {inherit pkgs frontend;};
       };
       defaultPackage = packages.backend;
     });

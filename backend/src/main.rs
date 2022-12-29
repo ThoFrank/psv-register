@@ -4,6 +4,7 @@ use axum::{
     routing::get,
     Router,
 };
+use lazy_static::lazy_static;
 use std::net::SocketAddr;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
@@ -13,7 +14,7 @@ async fn main() {
     let app = Router::new().nest_service("/", get(handler));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    // tracing::debug!("listening on {}", addr);
+    println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -38,10 +39,13 @@ async fn handler(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
 async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
     let req = Request::builder().uri(uri).body(Body::empty()).unwrap();
 
-    let html_path = std::env::var("WEBPAGE").unwrap_or("../frontend/dist".to_string());
+    lazy_static! {
+        static ref HTML_PATH: String =
+            std::env::var("WEBPAGE").unwrap_or("../frontend/dist".to_string());
+    }
 
     // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`
-    match ServeDir::new(html_path).oneshot(req).await {
+    match ServeDir::new(&*HTML_PATH).oneshot(req).await {
         Ok(res) => Ok(res.map(boxed)),
         Err(err) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,

@@ -18,11 +18,9 @@ wasm-bindgen-test = "0.3.18"
 [dependencies]
 chrono = "0.4.23"
 seed = "0.9.1"
-# shared = {path = "../shared"}
 serde = "1.0.137"
-# static_init = {version = "1.0.3", default-features = false, features = ["spin_loop"]}
-lazy_static = "1.4"
 email_address = "0.2.4"
+common = {path = "../common"}
 
 [profile.release]
 lto = true

@@ -4,8 +4,8 @@ let
   
 in pkgs.rustPlatform.buildRustPackage{
   name = "psv-register-frontend";
-  src = ./.;
-  cargoSha256 = "sha256-OimJZKqwjJrA/0Mw/EYclbF5xFUcxNtcVH/54I0OEeM=";
+  src = ./..;
+  cargoLock.lockFile = ../Cargo.lock;
   nativeBuildInputs = [
     rust
     pkgs.trunk

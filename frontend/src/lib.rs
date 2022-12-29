@@ -1,13 +1,9 @@
 use email_address::EmailAddress;
 use std::fmt::Display;
 
-use chrono::{prelude::*, Months};
-use lazy_static::lazy_static;
+use chrono::prelude::*;
+use common::{bow_type::BowType, class::Class, target_face::TargetFace};
 use seed::{prelude::*, *};
-
-lazy_static! {
-    pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2023, 01, 01).unwrap();
-}
 
 struct Model {
     first_name: String,
@@ -28,7 +24,7 @@ impl Model {
             BowType::Compound => Class::compound_classes(),
             BowType::Barebow => Class::barebow_classes(),
         }
-        .into_iter()
+        .iter()
         .filter(|cls| cls.in_range(self.date_of_birth))
         .copied()
         .collect();
@@ -91,247 +87,6 @@ impl Display for InsertedMail {
             InsertedMail::Valid(s) => s.fmt(f),
         }
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-enum BowType {
-    Recurve,
-    Compound,
-    Barebow,
-}
-
-impl BowType {
-    fn is_recurve(&self) -> bool {
-        matches!(self, Self::Recurve)
-    }
-    fn is_compound(&self) -> bool {
-        matches!(self, Self::Compound)
-    }
-    fn is_barebow(&self) -> bool {
-        matches!(self, Self::Barebow)
-    }
-}
-
-impl Default for BowType {
-    fn default() -> Self {
-        Self::Recurve
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum TargetFace {
-    Spot,
-    Cm40,
-    Cm60,
-    Cm80,
-    Cm122,
-}
-
-impl TargetFace {
-    fn for_cls(cls: Class) -> &'static [TargetFace] {
-        use Class::*;
-        use TargetFace::*;
-        match cls {
-            C10 | C11 | C30 | C40 | C12 | C13 | C14 => &[Spot],
-            R10 | R11 | R40 | R41 | R12 | R13 => &[Spot, Cm40],
-            R30 | R31 | R14 | R15 | B10 | B11 | B12 | B30 => &[Cm40],
-            R20 | R21 | B20 | C20 | OO => &[Cm60],
-            R22 | R23 => &[Cm80],
-        }
-    }
-}
-
-impl Display for TargetFace {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                TargetFace::Spot => "Spot",
-                TargetFace::Cm40 => "40cm",
-                TargetFace::Cm60 => "60cm",
-                TargetFace::Cm80 => "80cm",
-                TargetFace::Cm122 => "122cm",
-            }
-        )
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Class {
-    R10,
-    R11,
-    R20,
-    R21,
-    R22,
-    R23,
-    R30,
-    R31,
-    R40,
-    R41,
-    R12,
-    R13,
-    R14,
-    R15,
-    B10,
-    B11,
-    B20,
-    B30,
-    B12,
-    C10,
-    C11,
-    C20,
-    C30,
-    C40,
-    C12,
-    C13,
-    C14,
-    OO,
-}
-
-impl Class {
-    fn name(&self) -> &'static str {
-        match self {
-            Class::R10 => "Recurve Herren",
-            Class::R11 => "Recurve Damen",
-            Class::R20 => "Recurve Schüler A m",
-            Class::R21 => "Recurve Schüler A w",
-            Class::R22 => "Recurve Schüler B m",
-            Class::R23 => "Recurve Schüler B w",
-            Class::R30 => "Recurve Jugend m",
-            Class::R31 => "Recurve Jugend w",
-            Class::R40 => "Recurve Junioren m",
-            Class::R41 => "Recurve Junioren w",
-            Class::R12 => "Recurve Master m",
-            Class::R13 => "Recurve Master w",
-            Class::R14 => "Recurve Senioren m",
-            Class::R15 => "Recurve Senioren w",
-            Class::B10 => "Blank Herren",
-            Class::B11 => "Blank Damen",
-            Class::B20 => "Blank Schüler m/w",
-            Class::B30 => "Blank Jugend m/m",
-            Class::B12 => "Blank Master m",
-            Class::C10 => "Compound Herren",
-            Class::C11 => "Compound Damen",
-            Class::C20 => "Compound Schüler m/w",
-            Class::C30 => "Compound Jugend m/m",
-            Class::C40 => "Compound Junioren m/w",
-            Class::C12 => "Compound Master m",
-            Class::C13 => "Compound Master w",
-            Class::C14 => "Compound Senioren m",
-            Class::OO => "Offene Klasse",
-        }
-    }
-    fn comment(&self) -> &'static str {
-        match self{
-            Class::OO => "Eine Klasse für alle. Die Auflage ist größer als bei den offizielen Klassen. Dadurch ist eine Qualifikation zur Bezirksmeisterschaft ausgeschlossen.",
-            _ => "Reguläre Klasse nach Sportornung. Eine Weitermeldung zur Bezirksmeisterschaft ist möglich"
-        }
-    }
-    fn recurve_classes() -> &'static [Self] {
-        &[
-            Self::R10,
-            Self::R11,
-            Self::R20,
-            Self::R21,
-            Self::R22,
-            Self::R23,
-            Self::R30,
-            Self::R31,
-            Self::R40,
-            Self::R41,
-            Self::R12,
-            Self::R13,
-            Self::R14,
-            Self::R15,
-            Self::OO,
-        ]
-    }
-    fn barebow_classes() -> &'static [Self] {
-        &[
-            Self::B10,
-            Self::B11,
-            Self::B20,
-            Self::B30,
-            Self::B12,
-            Self::OO,
-        ]
-    }
-    fn compound_classes() -> &'static [Self] {
-        &[
-            Self::C10,
-            Self::C11,
-            Self::C20,
-            Self::C30,
-            Self::C40,
-            Self::C12,
-            Self::C13,
-            Self::C14,
-            Self::OO,
-        ]
-    }
-    fn in_range(&self, dob: NaiveDate) -> bool {
-        let year_range = match self {
-            Class::R10 => (21, 49),
-            Class::R11 => (21, 49),
-            Class::R20 => (13, 14),
-            Class::R21 => (13, 14),
-            Class::R22 => (11, 12),
-            Class::R23 => (11, 12),
-            Class::R30 => (15, 17),
-            Class::R31 => (15, 17),
-            Class::R40 => (18, 20),
-            Class::R41 => (18, 20),
-            Class::R12 => (50, 65),
-            Class::R13 => (50, 65),
-            Class::R14 => (66, 120),
-            Class::R15 => (66, 120),
-            Class::C10 => (21, 49),
-            Class::C11 => (21, 49),
-            Class::C20 => (1, 14),
-            Class::C30 => (15, 17),
-            Class::C40 => (18, 20),
-            Class::C12 => (50, 65),
-            Class::C13 => (50, 120),
-            Class::C14 => (66, 120),
-            Class::B10 => (21, 49),
-            Class::B11 => (21, 120),
-            Class::B20 => (1, 14),
-            Class::B30 => (15, 20),
-            Class::B12 => (50, 120),
-            Class::OO => (15, 120),
-        };
-
-        let date_range = (*SEASON_START - Months::new(year_range.1 * 12))
-            ..(*SEASON_START - Months::new((year_range.0 - 1) * 12));
-        date_range.contains(&dob)
-    }
-    fn classes_for(dob: NaiveDate, bow_type: BowType) -> Vec<Class> {
-        match bow_type {
-            BowType::Recurve => Self::recurve_classes(),
-            BowType::Compound => Self::compound_classes(),
-            BowType::Barebow => Self::barebow_classes(),
-        }
-        .into_iter()
-        .filter(|c| c.in_range(dob))
-        .map(|&c| c)
-        .collect()
-    }
-}
-
-impl Default for Class {
-    fn default() -> Self {
-        // default class for Recurve (default) and dob 1970 (default)
-        Self::R12
-    }
-}
-
-#[test]
-fn test_in_range() {
-    assert!(!Class::R10.in_range(NaiveDate::from_ymd_opt(1973, 12, 31).unwrap()));
-    assert!(Class::R10.in_range(NaiveDate::from_ymd_opt(1974, 1, 1).unwrap()));
-    assert!(Class::R10.in_range(NaiveDate::from_ymd_opt(2002, 12, 31).unwrap()));
-    assert!(!Class::R10.in_range(NaiveDate::from_ymd_opt(2003, 1, 1).unwrap()));
 }
 
 fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
@@ -474,7 +229,7 @@ fn view(model: &Model) -> Node<Msg> {
                     BowType::Compound => Class::compound_classes(),
                     BowType::Barebow => Class::barebow_classes(),
                 }
-                .into_iter()
+                .iter()
                 .filter(|cls| cls.in_range(model.date_of_birth))
                 .map(|cls| option!(
                     cls.name(),
@@ -487,8 +242,7 @@ fn view(model: &Model) -> Node<Msg> {
                     Msg::ClassChanged(
                         Some(Class::classes_for(dob, bow_type)
                             .into_iter()
-                            .filter(|cls| cls.name() == cls_name)
-                            .next()
+                            .find(|cls| cls.name() == cls_name)
                             .unwrap()),
                     )
                 })
@@ -499,7 +253,7 @@ fn view(model: &Model) -> Node<Msg> {
         li!("Auflage:"),
         li!(
             model.possible_target_faces.iter().map(|&tf| div![
-                input!(attrs!(At::Type => "radio", At::Name => "target_face"), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),
+                input!(attrs!(At::Type => "radio", At::Name => "target_face", At::Id => format!("{}", tf)), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),
                 label!(format!("{}", tf), attrs!(At::For => format!("{}", tf)))
             ]),
 
