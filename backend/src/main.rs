@@ -1,7 +1,7 @@
 use axum::{
     body::{boxed, Body, BoxBody},
     http::{Request, Response, StatusCode, Uri},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use lazy_static::lazy_static;
@@ -9,11 +9,16 @@ use std::net::SocketAddr;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
+mod archer;
+
 #[tokio::main]
 async fn main() {
-    let app = Router::new().nest_service("/", get(handler));
+    let app = Router::new()
+        .route("/archers", post(archer::create_archer))
+        .route("/archers", get(archer::list_archers))
+        .nest_service("/", get(handler));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

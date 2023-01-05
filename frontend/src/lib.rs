@@ -1,10 +1,12 @@
 use email_address::EmailAddress;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 use chrono::prelude::*;
 use common::{bow_type::BowType, class::Class, target_face::TargetFace};
 use seed::{prelude::*, *};
 
+#[derive(Serialize, Deserialize)]
 struct Model {
     first_name: String,
     last_name: String,
@@ -64,6 +66,7 @@ impl Model {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 enum InsertedMail {
     Invalid(String),
     Valid(String),
@@ -89,17 +92,40 @@ impl Display for InsertedMail {
     }
 }
 
-fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
-    let cls = Class::R12;
-    Model {
-        first_name: String::new(),
-        last_name: String::new(),
-        date_of_birth: NaiveDate::default(),
-        mail: InsertedMail::Invalid(String::new()),
-        bow_type: BowType::Recurve,
-        cls: Some(cls),
-        possible_target_faces: TargetFace::for_cls(cls).to_owned(),
-        selected_target_face: TargetFace::for_cls(cls)[0],
+fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
+    let default = {
+        let cls = Class::R12;
+        Model {
+            first_name: String::new(),
+            last_name: String::new(),
+            date_of_birth: NaiveDate::default(),
+            mail: InsertedMail::Invalid(String::new()),
+            bow_type: BowType::Recurve,
+            cls: Some(cls),
+            possible_target_faces: TargetFace::for_cls(cls).to_owned(),
+            selected_target_face: TargetFace::for_cls(cls)[0],
+        }
+    };
+
+    let window = window();
+    let Some(local_storage) = window.local_storage().ok().flatten() else {
+        seed::log!("Couldn't load local storage");
+        return default;
+    };
+    if let Some(ser_model) = local_storage.get_item("model").unwrap() {
+        match serde_json::from_str::<Model>(&ser_model) {
+            Ok(mut model) => {
+                model.check_and_update_cls(orders);
+                model.update_target_face();
+                model
+            }
+            Err(_) => {
+                seed::error!("Failed to load stored session");
+                default
+            }
+        }
+    } else {
+        default
     }
 }
 
@@ -148,6 +174,12 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             seed::log!("Selected target", tf);
             model.selected_target_face = tf;
         }
+    }
+
+    if let Some(local_storage) = window().local_storage().ok().flatten() {
+        local_storage
+            .set_item("model", &serde_json::to_string(&model).unwrap())
+            .unwrap()
     }
 }
 
@@ -259,7 +291,11 @@ fn view(model: &Model) -> Node<Msg> {
 
         ),
         li!(br!()),
-        li!(button!("Anmelden", IF!(model.first_name.is_empty()||model.last_name.is_empty()|| !model.mail.is_valid() => attrs!(At::Disabled => AtValue::None))))
+        li!(button!(
+            "Anmelden",
+            IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() => attrs!(At::Disabled => AtValue::None)),
+            input_ev(Ev::Click, |_| {seed::log!("Pressed submit button!"); None::<Msg>})
+        ))
     ]
 }
 

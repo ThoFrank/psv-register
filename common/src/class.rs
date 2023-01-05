@@ -1,12 +1,13 @@
 use crate::bow_type::BowType;
 use chrono::{Months, NaiveDate};
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 
 lazy_static! {
     pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Class {
     R10,
     R11,
@@ -22,18 +23,31 @@ pub enum Class {
     R13,
     R14,
     R15,
+    #[serde(rename = "B210")]
     B10,
+    #[serde(rename = "B211")]
     B11,
+    #[serde(rename = "B220")]
     B20,
+    #[serde(rename = "B230")]
     B30,
+    #[serde(rename = "B120")]
     B12,
+    #[serde(rename = "C110")]
     C10,
+    #[serde(rename = "C111")]
     C11,
+    #[serde(rename = "C120")]
     C20,
+    #[serde(rename = "C130")]
     C30,
+    #[serde(rename = "C140")]
     C40,
+    #[serde(rename = "C112")]
     C12,
+    #[serde(rename = "C113")]
     C13,
+    #[serde(rename = "C114")]
     C14,
     OO,
 }
