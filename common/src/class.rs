@@ -2,12 +2,13 @@ use crate::bow_type::BowType;
 use chrono::{Months, NaiveDate};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 
 lazy_static! {
     pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, strum::EnumIter)]
 pub enum Class {
     R10,
     R11,
@@ -90,6 +91,9 @@ impl Class {
             Class::OO => "Eine Klasse für alle. Die Auflage ist größer als bei den offizielen Klassen. Dadurch ist eine Qualifikation zur Bezirksmeisterschaft ausgeschlossen.",
             _ => "Reguläre Klasse nach Sportornung. Eine Weitermeldung zur Bezirksmeisterschaft ist möglich"
         }
+    }
+    pub fn all_classes() -> impl Iterator<Item = Self> {
+        Self::iter()
     }
     pub fn recurve_classes() -> &'static [Self] {
         &[

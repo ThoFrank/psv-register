@@ -13,10 +13,12 @@ mod archer;
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new()
+    let api = Router::new()
         .route("/archers", post(archer::create_archer))
-        .route("/archers", get(archer::list_archers))
-        .nest_service("/", get(handler));
+        .route("/archers", get(archer::list_archers));
+    let app = Router::new()
+        .nest_service("/", get(handler))
+        .nest_service("/api", api);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("listening on {}", addr);

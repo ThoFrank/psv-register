@@ -1,6 +1,6 @@
 use email_address::EmailAddress;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use chrono::prelude::*;
 use common::{bow_type::BowType, class::Class, target_face::TargetFace};
@@ -17,9 +17,26 @@ struct Model {
 
     possible_target_faces: Vec<TargetFace>,
     selected_target_face: TargetFace,
+
+    submitting: bool,
 }
 
 impl Model {
+    fn new() -> Self {
+        let date = NaiveDate::default();
+        let cls = Class::classes_for(date, BowType::Recurve)[0];
+        Model {
+            first_name: String::new(),
+            last_name: String::new(),
+            date_of_birth: date,
+            mail: InsertedMail::Invalid(String::new()),
+            bow_type: BowType::Recurve,
+            cls: Some(cls),
+            possible_target_faces: TargetFace::for_cls(cls).to_owned(),
+            selected_target_face: TargetFace::for_cls(cls)[0],
+            submitting: false,
+        }
+    }
     fn check_and_update_cls(&mut self, orders: &mut impl Orders<Msg>) {
         let available_classes: Vec<Class> = match self.bow_type {
             BowType::Recurve => Class::recurve_classes(),
@@ -66,7 +83,7 @@ impl Model {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 enum InsertedMail {
     Invalid(String),
     Valid(String),
@@ -93,26 +110,12 @@ impl Display for InsertedMail {
 }
 
 fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
-    let default = {
-        let cls = Class::R12;
-        Model {
-            first_name: String::new(),
-            last_name: String::new(),
-            date_of_birth: NaiveDate::default(),
-            mail: InsertedMail::Invalid(String::new()),
-            bow_type: BowType::Recurve,
-            cls: Some(cls),
-            possible_target_faces: TargetFace::for_cls(cls).to_owned(),
-            selected_target_face: TargetFace::for_cls(cls)[0],
-        }
-    };
-
     let window = window();
-    let Some(local_storage) = window.local_storage().ok().flatten() else {
-        seed::log!("Couldn't load local storage");
-        return default;
+    let Some(session_storage) = window.session_storage().ok().flatten() else {
+        seed::log!("Couldn't load session storage");
+        return Model::new();
     };
-    if let Some(ser_model) = local_storage.get_item("model").unwrap() {
+    if let Some(ser_model) = session_storage.get_item("model").unwrap() {
         match serde_json::from_str::<Model>(&ser_model) {
             Ok(mut model) => {
                 model.check_and_update_cls(orders);
@@ -121,11 +124,11 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
             }
             Err(_) => {
                 seed::error!("Failed to load stored session");
-                default
+                Model::new()
             }
         }
     } else {
-        default
+        Model::new()
     }
 }
 
@@ -137,6 +140,10 @@ enum Msg {
     BowTypeChange(BowType),
     ClassChanged(Option<Class>),
     TargetFaceChanged(TargetFace),
+
+    Submit,
+    RegistrationFailed(String),
+    RegistrationOk,
 }
 
 fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -174,10 +181,44 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             seed::log!("Selected target", tf);
             model.selected_target_face = tf;
         }
+        Msg::Submit => {
+            model.submitting = true;
+            orders.perform_cmd(post_participant(
+                common::archer::Archer::new(
+                    model.first_name.clone(),
+                    model.last_name.clone(),
+                    match &model.mail {
+                        InsertedMail::Invalid(_) => unreachable!(),
+                        InsertedMail::Valid(mail) => EmailAddress::from_str(mail).unwrap(),
+                    },
+                    model.date_of_birth,
+                    model.cls.expect("Submittion only possible if cls is set"),
+                    model.selected_target_face,
+                )
+                .expect("It shouldn't be possible to produce invalid values"),
+            ));
+        }
+        Msg::RegistrationFailed(err) => {
+            seed::window()
+                .alert_with_message(&format!("Anmeldung fehlgeschlagen! {err:?}"))
+                .ok();
+            seed::error!("Submission failed!", err);
+            model.submitting = false;
+        }
+        Msg::RegistrationOk => {
+            seed::window()
+                .alert_with_message("Anmeldung erfolgreich. Bestätigungsmail wurde abgeschickt.")
+                .ok();
+            seed::log!("Submission ok!");
+            *model = Model {
+                mail: model.mail.clone(),
+                ..Model::new()
+            }
+        }
     }
 
-    if let Some(local_storage) = window().local_storage().ok().flatten() {
-        local_storage
+    if let Some(session_storage) = window().session_storage().ok().flatten() {
+        session_storage
             .set_item("model", &serde_json::to_string(&model).unwrap())
             .unwrap()
     }
@@ -293,10 +334,28 @@ fn view(model: &Model) -> Node<Msg> {
         li!(br!()),
         li!(button!(
             "Anmelden",
-            IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() => attrs!(At::Disabled => AtValue::None)),
-            input_ev(Ev::Click, |_| {seed::log!("Pressed submit button!"); None::<Msg>})
+            IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() || !model.submitting => attrs!(At::Disabled => AtValue::None)),
+            input_ev(Ev::Click, |_| Msg::Submit)
         ))
     ]
+}
+
+async fn post_participant(archer: common::archer::Archer) -> Msg {
+    let request = Request::new("http:///127.0.0.1:3000/api/archers")
+        .method(Method::Post)
+        .json(&archer)
+        .unwrap();
+    let response = match fetch(request).await {
+        Ok(r) => r,
+        Err(e) => return Msg::RegistrationFailed(format!("{e:?}")),
+    };
+    match response.check_status() {
+        Ok(_) => Msg::RegistrationOk,
+        Err(e) => {
+            seed::log!(e);
+            Msg::RegistrationFailed(format!("{e:?}"))
+        }
+    }
 }
 
 #[wasm_bindgen(start)]
