@@ -29,7 +29,7 @@
           pkgs.trunk
           pkgs.wasm-bindgen-cli
           pkgs.pkg-config
-        ];
+        ] ++ pkgs.lib.lists.optional pkgs.stdenv.isDarwin [pkgs.darwin.apple_sdk.frameworks.Security];
         buildInputs = [
            pkgs.sqlite.dev
         ];

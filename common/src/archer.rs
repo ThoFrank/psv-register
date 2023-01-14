@@ -6,11 +6,11 @@ use crate::{class::Class, target_face::TargetFace};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Archer {
-    first_name: String,
-    last_name: String,
-    mail: EmailAddress,
+    pub first_name: String,
+    pub last_name: String,
+    pub mail: EmailAddress,
     date_of_birth: NaiveDate,
-    cls: Class,
+    class: Class,
     target_face: TargetFace,
 }
 
@@ -38,14 +38,17 @@ impl Archer {
             last_name,
             mail,
             date_of_birth: dob,
-            cls,
+            class: cls,
             target_face,
         })
     }
-    pub fn first_name(&self) -> &str {
-        &self.first_name
+    pub fn date_of_birth(&self) -> NaiveDate {
+        self.date_of_birth
     }
-    pub fn last_name(&self) -> &str {
-        &self.last_name
+    pub fn class(&self) -> Class {
+        self.class
+    }
+    pub fn target_face(&self) -> TargetFace {
+        self.target_face
     }
 }

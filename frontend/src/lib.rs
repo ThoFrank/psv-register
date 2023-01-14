@@ -334,14 +334,14 @@ fn view(model: &Model) -> Node<Msg> {
         li!(br!()),
         li!(button!(
             "Anmelden",
-            IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() || !model.submitting => attrs!(At::Disabled => AtValue::None)),
+            IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() || model.submitting => attrs!(At::Disabled => AtValue::None)),
             input_ev(Ev::Click, |_| Msg::Submit)
         ))
     ]
 }
 
 async fn post_participant(archer: common::archer::Archer) -> Msg {
-    let request = Request::new("http:///127.0.0.1:3000/api/archers")
+    let request = Request::new("http://127.0.0.1:3000/api/archers")
         .method(Method::Post)
         .json(&archer)
         .unwrap();

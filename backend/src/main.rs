@@ -4,15 +4,47 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use clap::Parser;
+use config::Config;
+use handlebars::Handlebars;
 use lazy_static::lazy_static;
+use static_init::dynamic;
 use std::net::SocketAddr;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
 mod archer;
+mod config;
+
+#[dynamic()]
+pub static mut CONFIG: Config = Config::default();
+
+#[dynamic()]
+pub static mut HANDLEBARS: Handlebars<'static> = Handlebars::new();
+
+#[derive(Parser, Debug)]
+struct CliArgs {
+    #[arg(long, default_value_t = String::from("."))]
+    config_dir: String,
+}
 
 #[tokio::main]
 async fn main() {
+    let args = CliArgs::parse();
+
+    *CONFIG.write() = load_config(&std::path::PathBuf::from(&args.config_dir).join("config.toml"));
+    {
+        let mut handlebars = HANDLEBARS.write();
+        handlebars.set_strict_mode(true);
+        handlebars.set_dev_mode(cfg!(debug_assertions));
+        handlebars
+            .register_template_file(
+                "user_mail",
+                std::path::PathBuf::from(args.config_dir).join("user_mail.tpl"),
+            )
+            .unwrap();
+    }
+
     let api = Router::new()
         .route("/archers", post(archer::create_archer))
         .route("/archers", get(archer::list_archers));
@@ -20,7 +52,7 @@ async fn main() {
         .nest_service("/", get(handler))
         .nest_service("/api", api);
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], CONFIG.read().port));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
@@ -59,4 +91,10 @@ async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, Str
             format!("Something went wrong: {}", err),
         )),
     }
+}
+
+fn load_config(path: &std::path::Path) -> Config {
+    let toml_config =
+        std::fs::read_to_string(path).expect(&format!("Couldn't read file from path {:?}", path));
+    toml::from_str(&toml_config).expect(&format!("Couldn't parse config content!"))
 }
