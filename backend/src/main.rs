@@ -105,6 +105,6 @@ async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, Str
 
 fn load_config(path: &std::path::Path) -> Config {
     let toml_config =
-        std::fs::read_to_string(path).expect(&format!("Couldn't read file from path {:?}", path));
-    toml::from_str(&toml_config).expect(&format!("Couldn't parse config content!"))
+        std::fs::read_to_string(path).unwrap_or_else(|_| panic!("Couldn't read file from path {:?}", path));
+    toml::from_str(&toml_config).expect("Couldn't parse config content!")
 }

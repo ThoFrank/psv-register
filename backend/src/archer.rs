@@ -80,7 +80,7 @@ pub async fn create_archer(
                     warn!("received wrong email format: {:?}", e);
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Falsches Email Format!"),
+                        "Falsches Email Format!".to_string(),
                     )
                 })
                 .unwrap(),

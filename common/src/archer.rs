@@ -23,10 +23,8 @@ impl Archer {
         cls: Class,
         target_face: TargetFace,
     ) -> Result<Self, ()> {
-        if Class::all_classes()
-            .filter(|c| c.in_range(dob))
-            .find(|&c| c == cls)
-            .is_none()
+        if !Class::all_classes()
+            .filter(|c| c.in_range(dob)).any(|c| c == cls)
         {
             return Err(());
         }
