@@ -118,6 +118,7 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
     if let Some(ser_model) = session_storage.get_item("model").unwrap() {
         match serde_json::from_str::<Model>(&ser_model) {
             Ok(mut model) => {
+                model.submitting = false;
                 model.check_and_update_cls(orders);
                 model.update_target_face();
                 model
@@ -200,7 +201,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::RegistrationFailed(err) => {
             seed::window()
-                .alert_with_message(&format!("Anmeldung fehlgeschlagen! {err:?}"))
+                .alert_with_message(&format!("Fehler! {err:?}"))
                 .ok();
             seed::error!("Submission failed!", err);
             model.submitting = false;
@@ -349,11 +350,12 @@ async fn post_participant(archer: common::archer::Archer) -> Msg {
         Ok(r) => r,
         Err(e) => return Msg::RegistrationFailed(format!("{e:?}")),
     };
+    let text = response.text().await;
     match response.check_status() {
         Ok(_) => Msg::RegistrationOk,
         Err(e) => {
             seed::log!(e);
-            Msg::RegistrationFailed(format!("{e:?}"))
+            Msg::RegistrationFailed(text.unwrap_or(format!("{e:?}")))
         }
     }
 }

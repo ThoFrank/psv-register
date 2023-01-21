@@ -1,0 +1,41 @@
+// @generated automatically by Diesel CLI.
+
+diesel::table! {
+    archers (bib) {
+        bib -> Integer,
+        session -> Integer,
+        division -> Text,
+        class -> Text,
+        target -> Text,
+        #[sql_name = "individual qualification"]
+        individual_qualification -> Integer,
+        #[sql_name = "team qualification"]
+        team_qualification -> Integer,
+        #[sql_name = "individual final"]
+        individual_final -> Integer,
+        #[sql_name = "team final"]
+        team_final -> Integer,
+        #[sql_name = "mixed team final"]
+        mixed_team_final -> Integer,
+        #[sql_name = "last name"]
+        last_name -> Text,
+        #[sql_name = "first name"]
+        first_name -> Text,
+        gender -> Nullable<Integer>,
+        #[sql_name = "country code"]
+        country_code -> Text,
+        #[sql_name = "country name"]
+        country_name -> Text,
+        #[sql_name = "date of birth"]
+        date_of_birth -> Text,
+        subclass -> Nullable<Text>,
+        #[sql_name = "country code 2"]
+        country_code_2 -> Nullable<Text>,
+        #[sql_name = "country name 2"]
+        country_name_2 -> Nullable<Text>,
+        #[sql_name = "country code 3"]
+        country_code_3 -> Nullable<Text>,
+        #[sql_name = "country name 3"]
+        country_name_3 -> Nullable<Text>,
+    }
+}

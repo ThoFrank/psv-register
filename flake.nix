@@ -10,6 +10,7 @@
       pkgs = import nixpkgs {inherit system overlays;};
     in rec {
       devShell = pkgs.mkShell {
+        DATABASE_URL = "database.sqlite";
         nativeBuildInputs = [
           #shared
           (pkgs.rust-bin.stable.latest.default.override {

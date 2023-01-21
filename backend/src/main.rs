@@ -6,6 +6,7 @@ use axum::{
 };
 use clap::Parser;
 use config::Config;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use handlebars::Handlebars;
 use lazy_static::lazy_static;
 use static_init::dynamic;
@@ -15,6 +16,9 @@ use tower_http::services::ServeDir;
 
 mod archer;
 mod config;
+mod db;
+mod models;
+mod schema;
 
 #[dynamic()]
 pub static mut CONFIG: Config = Config::default();
@@ -28,8 +32,14 @@ struct CliArgs {
     config_dir: String,
 }
 
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+    db::establish_connection()
+        .run_pending_migrations(MIGRATIONS)
+        .expect("Could not migrate database");
     let args = CliArgs::parse();
 
     *CONFIG.write() = load_config(&std::path::PathBuf::from(&args.config_dir).join("config.toml"));
