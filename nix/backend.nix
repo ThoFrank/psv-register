@@ -1,9 +1,9 @@
-{pkgs, frontend}:
+{ pkgs, frontend }:
 pkgs.rustPlatform.buildRustPackage {
   buildInputs = [
     pkgs.makeWrapper
     pkgs.sqlite.dev
-  ] ++ pkgs.lib.lists.optional pkgs.stdenv.isDarwin [pkgs.darwin.apple_sdk.frameworks.Security];
+  ] ++ pkgs.lib.lists.optional pkgs.stdenv.isDarwin [ pkgs.darwin.apple_sdk.frameworks.Security ];
   name = "psv-register";
   src = ./..;
   srcRoot = ../backend;

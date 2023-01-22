@@ -1,8 +1,9 @@
-{pkgs}:
+{ pkgs }:
 let
   rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-wasm-toolchain.toml;
-  
-in pkgs.rustPlatform.buildRustPackage{
+
+in
+pkgs.rustPlatform.buildRustPackage {
   name = "psv-register-frontend";
   src = ./..;
   cargoLock.lockFile = ../Cargo.lock;
