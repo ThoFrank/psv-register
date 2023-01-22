@@ -28,8 +28,17 @@ pub static mut HANDLEBARS: Handlebars<'static> = Handlebars::new();
 
 #[derive(Parser, Debug)]
 struct CliArgs {
-    #[arg(long, default_value_t = String::from("."))]
-    config_dir: String,
+    /// Path to config file
+    #[arg(long, default_value_t = String::from("config.toml"))]
+    config_file: String,
+
+    /// Path to database file. Overwrites environment variable
+    #[arg(long)]
+    database_file: Option<String>,
+
+    /// Path to email template
+    #[arg(long, default_value_t = String::from("user_mail.tpl"))]
+    mail_template_file: String,
 }
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -37,12 +46,15 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 #[tokio::main]
 async fn main() {
     env_logger::init();
+    let args = CliArgs::parse();
+    if let Some(db_file) = args.database_file {
+        std::env::set_var("DATABASE_URL", db_file);
+    }
     db::establish_connection()
         .run_pending_migrations(MIGRATIONS)
         .expect("Could not migrate database");
-    let args = CliArgs::parse();
 
-    *CONFIG.write() = load_config(&std::path::PathBuf::from(&args.config_dir).join("config.toml"));
+    *CONFIG.write() = load_config(&std::path::PathBuf::from(&args.config_file));
     {
         let mut handlebars = HANDLEBARS.write();
         handlebars.set_strict_mode(true);
@@ -50,7 +62,7 @@ async fn main() {
         handlebars
             .register_template_file(
                 "user_mail",
-                std::path::PathBuf::from(args.config_dir).join("user_mail.tpl"),
+                std::path::PathBuf::from(args.mail_template_file),
             )
             .unwrap();
     }
@@ -104,7 +116,7 @@ async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, Str
 }
 
 fn load_config(path: &std::path::Path) -> Config {
-    let toml_config =
-        std::fs::read_to_string(path).unwrap_or_else(|_| panic!("Couldn't read file from path {:?}", path));
+    let toml_config = std::fs::read_to_string(path)
+        .unwrap_or_else(|_| panic!("Couldn't read file from path {:?}", path));
     toml::from_str(&toml_config).expect("Couldn't parse config content!")
 }
