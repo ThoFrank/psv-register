@@ -3,7 +3,12 @@ pkgs.rustPlatform.buildRustPackage {
   buildInputs = [
     pkgs.makeWrapper
     pkgs.sqlite.dev
+    pkgs.openssl.dev
   ] ++ pkgs.lib.lists.optional pkgs.stdenv.isDarwin [ pkgs.darwin.apple_sdk.frameworks.Security ];
+
+  nativeBuildInputs = [
+    pkgs.pkg-config
+  ];
   name = "psv-register";
   src = ./..;
   srcRoot = ../backend;
