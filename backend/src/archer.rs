@@ -89,6 +89,7 @@ pub async fn create_archer(
             Some(format!("{} {}", payload.first_name, payload.last_name)),
             payload.mail.as_str().parse().unwrap(),
         ))
+        .header(lettre::message::header::ContentType::TEXT_PLAIN)
         .subject(&CONFIG.read().mail_message.subject)
         .body(HANDLEBARS.read().render("user_mail", &email_data).unwrap())
         .unwrap();
