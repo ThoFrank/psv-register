@@ -7,6 +7,7 @@ Name: {{first_name}} {{last_name}}
 Geburtsdatum: {{date_of_birth}}
 Klasse: {{class}}
 Scheibe: {{target_face}}
+Kommentar: {{comment}}
 
 Viele Grüße und Alle ins Gold
 Sportleitung der Bogenabteilung des PSV München

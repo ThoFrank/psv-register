@@ -22,6 +22,7 @@ pub async fn create_archer(Json(payload): Json<Archer>) -> Result<impl IntoRespo
         ),
         ("class", payload.class().name().to_owned()),
         ("target_face", payload.target_face().to_string()),
+        ("comment", payload.comment.clone()),
     ]);
 
     let archer = payload.clone();
@@ -71,7 +72,7 @@ fn save_archer(archer: Archer) -> Result<()> {
             .values(crate::models::ArcherAdditions {
                 bib: inserted_bib,
                 email: archer.mail.as_str().to_owned(),
-                comment: String::new(),
+                comment: archer.comment,
             })
             .execute(conn)?;
 

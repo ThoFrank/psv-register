@@ -14,6 +14,7 @@ struct Model {
     mail: InsertedMail,
     bow_type: BowType,
     cls: Option<Class>,
+    comment: String,
 
     possible_target_faces: Vec<TargetFace>,
     selected_target_face: TargetFace,
@@ -32,6 +33,7 @@ impl Model {
             mail: InsertedMail::Invalid(String::new()),
             bow_type: BowType::Recurve,
             cls: Some(cls),
+            comment: String::new(),
             possible_target_faces: TargetFace::for_cls(cls).to_owned(),
             selected_target_face: TargetFace::for_cls(cls)[0],
             submitting: false,
@@ -141,6 +143,7 @@ enum Msg {
     BowTypeChange(BowType),
     ClassChanged(Option<Class>),
     TargetFaceChanged(TargetFace),
+    CommentChanged(String),
 
     Submit,
     RegistrationFailed(String),
@@ -195,6 +198,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     model.date_of_birth,
                     model.cls.expect("Submittion only possible if cls is set"),
                     model.selected_target_face,
+                    model.comment.clone(),
                 )
                 .expect("It shouldn't be possible to produce invalid values"),
             ));
@@ -216,6 +220,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 ..Model::new()
             }
         }
+        Msg::CommentChanged(c) => model.comment = c,
     }
 
     if let Some(session_storage) = window().session_storage().ok().flatten() {
@@ -332,6 +337,12 @@ fn view(model: &Model) -> Node<Msg> {
             ]),
 
         ),
+        li!(br!()),
+        li!("Kommentar:"),
+        li!(textarea!(
+            attrs!(At::Value => model.comment),
+            input_ev(Ev::Input, Msg::CommentChanged)
+        )),
         li!(br!()),
         li!(button!(
             "Anmelden",
