@@ -1,4 +1,4 @@
-use crate::schema::archers;
+use crate::schema::{archer_additions, archers};
 use diesel::prelude::*;
 
 #[derive(Queryable)]
@@ -49,4 +49,12 @@ pub struct InsertableArcher {
     pub country_name_2: String,
     pub country_code_3: String,
     pub country_name_3: String,
+}
+
+#[derive(Insertable, Queryable)]
+#[diesel(table_name = archer_additions)]
+pub struct ArcherAdditions {
+    pub bib: i32,
+    pub email: String,
+    pub comment: String,
 }

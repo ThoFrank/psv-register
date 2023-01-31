@@ -17,6 +17,7 @@ use tower_http::services::ServeDir;
 mod archer;
 mod config;
 mod db;
+mod error;
 mod models;
 mod schema;
 
@@ -102,7 +103,7 @@ async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, Str
 
     lazy_static! {
         static ref HTML_PATH: String =
-            std::env::var("WEBPAGE").unwrap_or("../frontend/dist".to_string());
+            std::env::var("WEBPAGE").unwrap_or_else(|_| "../frontend/dist".to_string());
     }
 
     // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`

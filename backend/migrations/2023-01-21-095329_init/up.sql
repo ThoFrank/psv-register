@@ -20,5 +20,11 @@ CREATE TABLE "archers" (
 	"country name 2"	TEXT,
 	"country code 3"	TEXT,
 	"country name 3"	TEXT,
-	PRIMARY KEY("Bib" AUTOINCREMENT)
-)
+	PRIMARY KEY("bib" AUTOINCREMENT)
+);
+CREATE TABLE "archer_additions" (
+	"bib"	INTEGER NOT NULL,
+	"email"	TEXT,
+	"comment"	TEXT,
+	PRIMARY KEY("bib")
+);

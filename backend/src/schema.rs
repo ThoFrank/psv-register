@@ -1,6 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    archer_additions (bib) {
+        bib -> Integer,
+        email -> Nullable<Text>,
+        comment -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     archers (bib) {
         bib -> Integer,
         session -> Integer,
@@ -39,3 +47,5 @@ diesel::table! {
         country_name_3 -> Nullable<Text>,
     }
 }
+
+diesel::allow_tables_to_appear_in_same_query!(archer_additions, archers,);
