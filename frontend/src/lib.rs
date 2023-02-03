@@ -84,7 +84,7 @@ impl Model {
             self.selected_target_face = *self
                 .possible_target_faces
                 .get(0)
-                .unwrap_or(&TargetFace::Cm40);
+                .unwrap_or(&TargetFace::M70cm122);
         }
     }
 }
@@ -336,7 +336,7 @@ fn view(model: &Model) -> Node<Msg> {
         ),
         li!(em!(model.cls.map(|cls| cls.comment()))),
         li!(br!()),
-        li!("Auflage:"),
+        li!("Scheibe:"),
         li!(
             model.possible_target_faces.iter().map(|&tf| div![
                 input!(attrs!(At::Type => "radio", At::Name => "target_face", At::Id => format!("{}", tf)), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),

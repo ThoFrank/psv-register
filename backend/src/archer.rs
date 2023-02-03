@@ -110,6 +110,10 @@ async fn send_registration_mail(
             Some(format!("{} {}", archer.first_name, archer.last_name)),
             archer.mail.as_str().parse().unwrap(),
         ))
+        .bcc(Mailbox::new(
+            Some("Thomas Frank".to_string()),
+            "sport@bogen-psv.de".parse().unwrap(),
+        ))
         .header(lettre::message::header::ContentType::TEXT_PLAIN)
         .subject(&CONFIG.read().mail_message.subject)
         .body(HANDLEBARS.read().render("user_mail", &email_data).unwrap())

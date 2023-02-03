@@ -16,6 +16,8 @@ pub enum Class {
     R21,
     R22,
     R23,
+    R24,
+    R25,
     R30,
     R31,
     R40,
@@ -32,8 +34,10 @@ pub enum Class {
     B20,
     #[serde(rename = "B230")]
     B30,
-    #[serde(rename = "B120")]
+    #[serde(rename = "B212")]
     B12,
+    #[serde(rename = "B213")]
+    B13,
     #[serde(rename = "C110")]
     C10,
     #[serde(rename = "C111")]
@@ -50,6 +54,8 @@ pub enum Class {
     C13,
     #[serde(rename = "C114")]
     C14,
+    #[serde(rename = "C115")]
+    C15,
     OO,
 }
 
@@ -62,6 +68,8 @@ impl Class {
             Class::R21 => "Recurve Schüler A w",
             Class::R22 => "Recurve Schüler B m",
             Class::R23 => "Recurve Schüler B w",
+            Class::R24 => "Recurve Schüler C m",
+            Class::R25 => "Recurve Schüler C w",
             Class::R30 => "Recurve Jugend m",
             Class::R31 => "Recurve Jugend w",
             Class::R40 => "Recurve Junioren m",
@@ -75,6 +83,7 @@ impl Class {
             Class::B20 => "Blank Schüler m/w",
             Class::B30 => "Blank Jugend m/m",
             Class::B12 => "Blank Master m",
+            Class::B13 => "Blank Master w",
             Class::C10 => "Compound Herren",
             Class::C11 => "Compound Damen",
             Class::C20 => "Compound Schüler m/w",
@@ -83,6 +92,7 @@ impl Class {
             Class::C12 => "Compound Master m",
             Class::C13 => "Compound Master w",
             Class::C14 => "Compound Senioren m",
+            Class::C15 => "Compound Senioren w",
             Class::OO => "Offene Klasse",
         }
     }
@@ -103,6 +113,8 @@ impl Class {
             Self::R21,
             Self::R22,
             Self::R23,
+            Self::R24,
+            Self::R25,
             Self::R30,
             Self::R31,
             Self::R40,
@@ -121,6 +133,7 @@ impl Class {
             Self::B20,
             Self::B30,
             Self::B12,
+            Self::B13,
             Self::OO,
         ]
     }
@@ -134,6 +147,7 @@ impl Class {
             Self::C12,
             Self::C13,
             Self::C14,
+            Self::C15,
             Self::OO,
         ]
     }
@@ -145,6 +159,8 @@ impl Class {
             Class::R21 => (13, 14),
             Class::R22 => (11, 12),
             Class::R23 => (11, 12),
+            Class::R24 => (1, 10),
+            Class::R25 => (1, 10),
             Class::R30 => (15, 17),
             Class::R31 => (15, 17),
             Class::R40 => (18, 20),
@@ -159,13 +175,15 @@ impl Class {
             Class::C30 => (15, 17),
             Class::C40 => (18, 20),
             Class::C12 => (50, 65),
-            Class::C13 => (50, 120),
+            Class::C13 => (50, 65),
             Class::C14 => (66, 120),
+            Class::C15 => (66, 120),
             Class::B10 => (21, 49),
-            Class::B11 => (21, 120),
+            Class::B11 => (21, 49),
             Class::B20 => (1, 14),
             Class::B30 => (15, 20),
             Class::B12 => (50, 120),
+            Class::B13 => (50, 120),
             Class::OO => (15, 120),
         };
 

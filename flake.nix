@@ -47,6 +47,6 @@
 
         formatter = pkgs.nixpkgs-fmt;
 
-        nixosModules.psv-registration = import nix/module.nix "psv-registration-halle" packages.default;
+        nixosModules.psv-registration = import nix/module.nix "psv-registration-wa" packages.default;
       });
 }
