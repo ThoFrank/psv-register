@@ -10,7 +10,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use handlebars::Handlebars;
 use lazy_static::lazy_static;
 use static_init::dynamic;
-use std::net::SocketAddr;
+use std::{net::SocketAddr, path::PathBuf};
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
@@ -40,6 +40,11 @@ struct CliArgs {
     /// Path to email template
     #[arg(long, default_value_t = String::from("user_mail.tpl"))]
     mail_template_file: String,
+
+    /// Path to email password file.
+    /// Overwrites password from config
+    #[arg(long)]
+    mail_password_file: Option<PathBuf>,
 }
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -55,7 +60,14 @@ async fn main() {
         .run_pending_migrations(MIGRATIONS)
         .expect("Could not migrate database");
 
-    *CONFIG.write() = load_config(&std::path::PathBuf::from(&args.config_file));
+    *CONFIG.write() = {
+        let mut config = load_config(&std::path::PathBuf::from(&args.config_file));
+        if let Some(pswd) = args.mail_password_file {
+            config.mail_server.smtp_password =
+                std::fs::read_to_string(pswd).expect("Password file couldn't be read");
+        }
+        config
+    };
     {
         let mut handlebars = HANDLEBARS.write();
         handlebars.set_strict_mode(true);
