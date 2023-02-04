@@ -22,6 +22,10 @@ struct Model {
     submitting: bool,
 }
 
+thread_local! {
+    static BASE_URL: std::cell::RefCell<Url> = std::cell::RefCell::new(Url::new());
+}
+
 impl Model {
     fn new() -> Self {
         let date = NaiveDate::default();
@@ -111,7 +115,10 @@ impl Display for InsertedMail {
     }
 }
 
-fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
+fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
+    BASE_URL.with(|base_url| {
+        *base_url.borrow_mut() = url.to_base_url();
+    });
     let window = window();
     let Some(session_storage) = window.session_storage().ok().flatten() else {
         seed::log!("Couldn't load session storage");
@@ -353,7 +360,8 @@ fn view(model: &Model) -> Node<Msg> {
 }
 
 async fn post_participant(archer: common::archer::Archer) -> Msg {
-    let request = Request::new("http://127.0.0.1:3000/api/archers")
+    let url = BASE_URL.with(|base| base.borrow().clone().set_path(&["api", "archers"]));
+    let request = Request::new(url.to_string())
         .method(Method::Post)
         .json(&archer)
         .unwrap();
