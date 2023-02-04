@@ -26,6 +26,7 @@
 
             #backend
             pkgs.diesel-cli
+            pkgs.openssl.dev
 
             #frontend
             # pkgs.cargo-generate
