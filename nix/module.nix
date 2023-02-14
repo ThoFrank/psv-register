@@ -11,6 +11,29 @@ in
       type = types.str;
       default = "/var/psv-register/${service-name}.sqlite";
     };
+    nginx = mkOption {
+      description = lib.mkDoc ''
+        Configuration for nginx reverse proxy.
+      '';
+      type = types.submodule {
+        options = {
+          enable = mkOption {
+            type = types.bool;
+            default = false;
+            description = lib.mdDoc ''
+              Configure the nginx reverse proxy settings.
+            '';
+          };
+
+          hostName = mkOption {
+            type = types.str;
+            description = lib.mdDoc ''
+              The hostname use to setup the virtualhost configuration
+            '';
+          };
+        };
+      };
+    };
     smtp-password-file = mkOption {
       type = types.str;
       example = "/etc/passwords/smtp.password";
@@ -52,6 +75,20 @@ in
         --database-file ${cfg.database-location} \
         --mail-password-file ${cfg.smtp-password-file}
       '';
+    };
+
+    services.nginx = {
+      enable = mkDefault cfg.nginx.enable;
+      recommendedProxySettings = mkDefault true;
+      recommendedTlsSettings = mkDefault true;
+
+      virtualHosts."${cfg.nginx.hostName}" = mkIf cfg.nginx.enable {
+        enableACME = true;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:${cfg.settings.port}";
+        };
+      };
     };
   };
 }
