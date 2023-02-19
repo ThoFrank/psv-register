@@ -3,9 +3,10 @@ service-name: service-pkg:
 with lib;
 let
   cfg = config.services."${service-name}";
+  cfg_file = (pkgs.formats.toml {}).generate service-name cfg.settings;
 in
 {
-  options = {
+  options.services."${service-name}" = {
     enable = mkEnableOption "${service-name} service";
     database-location = mkOption {
       type = types.str;
@@ -43,7 +44,7 @@ in
       '';
     };
     settings = mkOption {
-      type = pkgs.formats.toml.type;
+      type = (pkgs.formats.toml {}).type;
       default = { };
       example = literalExpression ''
         {
@@ -70,7 +71,7 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig.ExecStart = ''
         ${service-pkg}/bin/backend \
-        --config-file ${pkgs.formats.toml.generate "${service-name} cfg.settings"} \
+        --config-file ${cfg_file} \
         --mail-template-file ${../backend/user_mail.tpl} \
         --database-file ${cfg.database-location} \
         --mail-password-file ${cfg.smtp-password-file}
