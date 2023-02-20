@@ -3,7 +3,7 @@ service-name: service-pkg:
 with lib;
 let
   cfg = config.services."${service-name}";
-  cfg_file = (pkgs.formats.toml {}).generate service-name cfg.settings;
+  cfg_file = (pkgs.formats.toml { }).generate service-name cfg.settings;
 in
 {
   options.services."${service-name}" = {
@@ -44,7 +44,7 @@ in
       '';
     };
     settings = mkOption {
-      type = (pkgs.formats.toml {}).type;
+      type = (pkgs.formats.toml { }).type;
       default = { };
       example = literalExpression ''
         {
