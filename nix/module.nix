@@ -12,32 +12,28 @@ in
       type = types.str;
       default = "/var/psv-register/${service-name}.sqlite";
     };
-    nginx = mkOption {
-      description = lib.mkDoc ''
-        Configuration for nginx reverse proxy.
-      '';
-      type = types.submodule {
-        options = {
-          enable = mkOption {
-            type = types.bool;
-            default = false;
-            description = lib.mdDoc ''
-              Configure the nginx reverse proxy settings.
-            '';
-          };
+    nginx = {
 
-          hostName = mkOption {
-            type = types.str;
-            description = lib.mdDoc ''
-              The hostname use to setup the virtualhost configuration
-            '';
-          };
-        };
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = lib.mdDoc ''
+          Configure the nginx reverse proxy settings.
+        '';
+      };
+
+      hostName = mkOption {
+        type = types.str;
+        description = lib.mdDoc ''
+          The hostname use to setup the virtualhost configuration
+        '';
+        default = "psv.register.com";
       };
     };
     smtp-password-file = mkOption {
       type = types.str;
       example = "/etc/passwords/smtp.password";
+      default = "";
       description = ''
         Path to a file containing the password. This overwrites the password given in the settings.
         This option is mandatory because you shouldn't put the real password into the nix store (settings of this module).
@@ -87,7 +83,7 @@ in
         enableACME = true;
         forceSSL = true;
         locations."/" = {
-          proxyPass = "http://127.0.0.1:${cfg.settings.port}";
+          proxyPass = "http://127.0.0.1:${builtins.toString cfg.settings.port}";
         };
       };
     };
