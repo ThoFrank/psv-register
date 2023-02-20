@@ -8,6 +8,7 @@ pkgs.rustPlatform.buildRustPackage {
 
   nativeBuildInputs = [
     pkgs.pkg-config
+    pkgs.rust-bin.stable.latest.default
   ];
   name = "psv-register";
   src = ./..;
