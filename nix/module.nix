@@ -65,6 +65,9 @@ in
   config = {
     systemd.services."${service-name}" = {
       wantedBy = [ "multi-user.target" ];
+      environment = {
+        RUST_LOG = "info";
+      };
       serviceConfig.ExecStart = ''
         ${service-pkg}/bin/backend \
         --config-file ${cfg_file} \
