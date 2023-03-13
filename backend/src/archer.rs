@@ -1,6 +1,6 @@
 use crate::{error::*, schema, CONFIG, HANDLEBARS};
 use axum::{http::StatusCode, response::IntoResponse, Json};
-use common::archer::Archer;
+use common::archer::{Archer, RegisteredArcher};
 use common::class::Class;
 use diesel::prelude::*;
 use lettre::message::Mailbox;
@@ -35,8 +35,8 @@ pub async fn create_archer(Json(payload): Json<Archer>) -> Result<impl IntoRespo
     Ok((StatusCode::CREATED, Json(payload)))
 }
 
-pub async fn list_archers() -> impl IntoResponse {
-    (StatusCode::NOT_IMPLEMENTED, "501 Not implemented!")
+pub async fn list_archers() -> Result<impl IntoResponse> {
+    Ok(Json(get_archers()?))
 }
 
 fn save_archer(archer: Archer) -> Result<()> {
@@ -126,4 +126,23 @@ async fn send_registration_mail(
             .build();
     mailer.send(email).await?;
     Ok(())
+}
+
+fn get_archers() -> Result<Vec<RegisteredArcher>> {
+    use crate::models::*;
+    use crate::schema::archers::dsl::*;
+    let mut connection = crate::db::establish_connection();
+    let ret = archers.load::<Archer>(&mut connection)?;
+
+    Ok(ret.into_iter().map(|a| a.into()).collect())
+}
+
+impl From<crate::models::Archer> for RegisteredArcher {
+    fn from(val: crate::models::Archer) -> Self {
+        RegisteredArcher {
+            first_name: val.first_name,
+            last_name: val.last_name,
+            class: val.class.parse().unwrap(),
+        }
+    }
 }

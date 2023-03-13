@@ -10,7 +10,7 @@ pub struct Archer {
     pub target: String,
     pub individual_qualification: i32,
     pub team_qualification: i32,
-    pub individual_finale: i32,
+    pub individual_final: i32,
     pub team_final: i32,
     pub mixed_team_final: i32,
     pub last_name: String,
@@ -20,10 +20,10 @@ pub struct Archer {
     pub country_name: String,
     pub date_of_birth: String,
     pub subclass: Option<String>,
-    pub country_code2: String,
-    pub country_name2: String,
-    pub country_code3: String,
-    pub country_name3: String,
+    pub country_code_2: Option<String>,
+    pub country_name_2: Option<String>,
+    pub country_code_3: Option<String>,
+    pub country_name_3: Option<String>,
 }
 
 #[derive(Insertable, Default)]

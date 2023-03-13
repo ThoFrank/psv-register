@@ -15,6 +15,13 @@ pub struct Archer {
     target_face: TargetFace,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct RegisteredArcher {
+    pub first_name: String,
+    pub last_name: String,
+    pub class: Class,
+}
+
 impl Archer {
     pub fn new(
         first_name: String,

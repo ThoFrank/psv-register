@@ -1,3 +1,5 @@
+use std::{fmt::Display, str::FromStr};
+
 use crate::bow_type::BowType;
 use chrono::{Months, NaiveDate};
 use lazy_static::lazy_static;
@@ -26,36 +28,21 @@ pub enum Class {
     R13,
     R14,
     R15,
-    #[serde(rename = "B210")]
-    B10,
-    #[serde(rename = "B211")]
-    B11,
-    #[serde(rename = "B220")]
-    B20,
-    #[serde(rename = "B230")]
-    B30,
-    #[serde(rename = "B212")]
-    B12,
-    #[serde(rename = "B213")]
-    B13,
-    #[serde(rename = "C110")]
-    C10,
-    #[serde(rename = "C111")]
-    C11,
-    #[serde(rename = "C120")]
-    C20,
-    #[serde(rename = "C130")]
-    C30,
-    #[serde(rename = "C140")]
-    C40,
-    #[serde(rename = "C112")]
-    C12,
-    #[serde(rename = "C113")]
-    C13,
-    #[serde(rename = "C114")]
-    C14,
-    #[serde(rename = "C115")]
-    C15,
+    B210,
+    B211,
+    B220,
+    B230,
+    B212,
+    B213,
+    C110,
+    C111,
+    C120,
+    C130,
+    C140,
+    C112,
+    C113,
+    C114,
+    C115,
     OO,
 }
 
@@ -78,21 +65,21 @@ impl Class {
             Class::R13 => "Recurve Master w",
             Class::R14 => "Recurve Senioren m",
             Class::R15 => "Recurve Senioren w",
-            Class::B10 => "Blank Herren",
-            Class::B11 => "Blank Damen",
-            Class::B20 => "Blank Schüler m/w",
-            Class::B30 => "Blank Jugend m/m",
-            Class::B12 => "Blank Master m",
-            Class::B13 => "Blank Master w",
-            Class::C10 => "Compound Herren",
-            Class::C11 => "Compound Damen",
-            Class::C20 => "Compound Schüler m/w",
-            Class::C30 => "Compound Jugend m/m",
-            Class::C40 => "Compound Junioren m/w",
-            Class::C12 => "Compound Master m",
-            Class::C13 => "Compound Master w",
-            Class::C14 => "Compound Senioren m",
-            Class::C15 => "Compound Senioren w",
+            Class::B210 => "Blank Herren",
+            Class::B211 => "Blank Damen",
+            Class::B220 => "Blank Schüler m/w",
+            Class::B230 => "Blank Jugend m/m",
+            Class::B212 => "Blank Master m",
+            Class::B213 => "Blank Master w",
+            Class::C110 => "Compound Herren",
+            Class::C111 => "Compound Damen",
+            Class::C120 => "Compound Schüler m/w",
+            Class::C130 => "Compound Jugend m/m",
+            Class::C140 => "Compound Junioren m/w",
+            Class::C112 => "Compound Master m",
+            Class::C113 => "Compound Master w",
+            Class::C114 => "Compound Senioren m",
+            Class::C115 => "Compound Senioren w",
             Class::OO => "Offene Klasse",
         }
     }
@@ -128,26 +115,26 @@ impl Class {
     }
     pub fn barebow_classes() -> &'static [Self] {
         &[
-            Self::B10,
-            Self::B11,
-            Self::B20,
-            Self::B30,
-            Self::B12,
-            Self::B13,
+            Self::B210,
+            Self::B211,
+            Self::B220,
+            Self::B230,
+            Self::B212,
+            Self::B213,
             Self::OO,
         ]
     }
     pub fn compound_classes() -> &'static [Self] {
         &[
-            Self::C10,
-            Self::C11,
-            Self::C20,
-            Self::C30,
-            Self::C40,
-            Self::C12,
-            Self::C13,
-            Self::C14,
-            Self::C15,
+            Self::C110,
+            Self::C111,
+            Self::C120,
+            Self::C130,
+            Self::C140,
+            Self::C112,
+            Self::C113,
+            Self::C114,
+            Self::C115,
             Self::OO,
         ]
     }
@@ -169,21 +156,21 @@ impl Class {
             Class::R13 => (50, 65),
             Class::R14 => (66, 120),
             Class::R15 => (66, 120),
-            Class::C10 => (21, 49),
-            Class::C11 => (21, 49),
-            Class::C20 => (1, 14),
-            Class::C30 => (15, 17),
-            Class::C40 => (18, 20),
-            Class::C12 => (50, 65),
-            Class::C13 => (50, 65),
-            Class::C14 => (66, 120),
-            Class::C15 => (66, 120),
-            Class::B10 => (21, 49),
-            Class::B11 => (21, 49),
-            Class::B20 => (1, 14),
-            Class::B30 => (15, 20),
-            Class::B12 => (50, 120),
-            Class::B13 => (50, 120),
+            Class::C110 => (21, 49),
+            Class::C111 => (21, 49),
+            Class::C120 => (1, 14),
+            Class::C130 => (15, 17),
+            Class::C140 => (18, 20),
+            Class::C112 => (50, 65),
+            Class::C113 => (50, 65),
+            Class::C114 => (66, 120),
+            Class::C115 => (66, 120),
+            Class::B210 => (21, 49),
+            Class::B211 => (21, 49),
+            Class::B220 => (1, 14),
+            Class::B230 => (15, 20),
+            Class::B212 => (50, 120),
+            Class::B213 => (50, 120),
             Class::OO => (15, 120),
         };
 
@@ -201,6 +188,28 @@ impl Class {
         .filter(|c| c.in_range(dob))
         .copied()
         .collect()
+    }
+}
+
+impl FromStr for Class {
+    type Err = UnknownClassError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::iter()
+            .find(|c| format!("{c:?}") == s)
+            .ok_or(UnknownClassError { class: s.into() })
+    }
+}
+
+#[derive(Debug)]
+pub struct UnknownClassError {
+    pub class: String,
+}
+
+impl std::error::Error for UnknownClassError {}
+impl Display for UnknownClassError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Unknown class: {}", self.class)
     }
 }
 

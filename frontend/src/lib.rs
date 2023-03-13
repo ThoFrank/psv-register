@@ -360,7 +360,7 @@ fn view(model: &Model) -> Node<Msg> {
 }
 
 async fn post_participant(archer: common::archer::Archer) -> Msg {
-    let url = BASE_URL.with(|base| base.borrow().clone().set_path(&["api", "archers"]));
+    let url = BASE_URL.with(|base| base.borrow().clone().set_path(["api", "archers"]));
     let request = Request::new(url.to_string())
         .method(Method::Post)
         .json(&archer)

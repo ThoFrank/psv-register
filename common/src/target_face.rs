@@ -24,10 +24,10 @@ impl TargetFace {
             R20 | R21 => &[M40cm122],
             R22 | R23 => &[M25cm80],
             R24 | R25 => &[M18cm80],
-            C10 | C11 | C12 | C13 | C14 | C15 | C30 | C40 => &[M50Spot10_5],
-            C20 => &[M40cm80],
-            B10 | B11 | B12 | B13 | B30 => &[M40cm122],
-            B20 => &[M25cm80],
+            C110 | C111 | C112 | C113 | C114 | C115 | C130 | C140 => &[M50Spot10_5],
+            C120 => &[M40cm80],
+            B210 | B211 | B212 | B213 | B230 => &[M40cm122],
+            B220 => &[M25cm80],
             OO => &[M25cm80],
         }
     }
@@ -39,7 +39,7 @@ impl std::fmt::Display for TargetFace {
             f,
             "{}",
             match self {
-                TargetFace::M70cm122 => "70m/122cm",
+                TargetFace::M70cm122 => "70m / 122cm",
                 TargetFace::M60cm122 => "60m / 122cm",
                 TargetFace::M50cm122 => "50m / 122cm",
                 TargetFace::M40cm122 => "40m / 122cm",
