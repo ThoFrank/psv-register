@@ -86,7 +86,7 @@ impl Class {
     pub fn comment(&self) -> &'static str {
         match self{
             Class::OO => "Eine Klasse für alle. Die Auflage ist größer als bei den offizielen Klassen. Dadurch ist eine Qualifikation zur Bezirksmeisterschaft ausgeschlossen.",
-            _ => "Reguläre Klasse nach Sportornung. Eine Weitermeldung zur Bezirksmeisterschaft ist möglich"
+            _ => "Reguläre Klasse nach Sportordnung. Eine Weitermeldung zur Bezirksmeisterschaft ist möglich"
         }
     }
     pub fn all_classes() -> impl Iterator<Item = Self> {
