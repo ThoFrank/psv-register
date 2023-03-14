@@ -22,12 +22,12 @@ in
         '';
       };
 
-      hostName = mkOption {
-        type = types.str;
+      hostNames = mkOption {
+        type = types.listOf types.str;
         description = lib.mdDoc ''
-          The hostname use to setup the virtualhost configuration
+          The hostnames use to setup the virtualhost configuration
         '';
-        default = "psv.register.com";
+        default = ["psv.register.com"];
       };
     };
     smtp-password-file = mkOption {
@@ -82,9 +82,10 @@ in
       recommendedProxySettings = mkDefault true;
       recommendedTlsSettings = mkDefault true;
 
-      virtualHosts."${cfg.nginx.hostName}" = mkIf cfg.nginx.enable {
+      virtualHosts."${builtins.head cfg.nginx.hostNames}" = mkIf cfg.nginx.enable {
         enableACME = true;
         forceSSL = true;
+        serverAliases = (builtins.tail cfg.nginx.hostNames);
         locations."/" = {
           proxyPass = "http://127.0.0.1:${builtins.toString cfg.settings.port}";
         };
