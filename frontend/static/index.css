@@ -18,6 +18,12 @@ body {
 	font-weight: 300;
 }
 
+footer {
+	text-align: center;
+	padding: 15px;
+	background: #e0e0e0;
+}
+
 a:visited {
 	color: unset;
 }
