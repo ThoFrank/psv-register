@@ -13,6 +13,8 @@ pkgs.rustPlatform.buildRustPackage {
     pkgs.wasm-bindgen-cli
   ];
 
+  TRUNK_TOOLS_WASM_BINDGEN = pkgs.wasm-bindgen-cli.version;
+
   buildPhase = ''
     mkdir cache
     export XDG_CACHE_HOME=$(pwd)/cache
