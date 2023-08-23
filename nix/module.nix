@@ -62,7 +62,7 @@ in
       '';
     };
   };
-  config = {
+  config = mkIf cfg.enable {
     systemd.services."${service-name}" = {
       wantedBy = [ "multi-user.target" ];
       environment = {
