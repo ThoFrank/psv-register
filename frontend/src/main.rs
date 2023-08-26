@@ -379,7 +379,6 @@ async fn post_participant(archer: common::archer::Archer) -> Msg {
     }
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
+pub fn main() {
     App::start("app", init, update, view);
 }

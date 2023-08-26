@@ -9,7 +9,10 @@
   outputs = { self, nixpkgs, flake-utils, rust-overlay }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ (import rust-overlay) ];
+        overlays = [
+          (import rust-overlay)
+          (import nix/overlay.nix)
+        ];
         pkgs = import nixpkgs { inherit system overlays; };
       in
       rec {
