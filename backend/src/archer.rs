@@ -63,6 +63,7 @@ fn save_archer(archer: Archer) -> Result<()> {
                 gender: None,
                 country_code: "PSV".to_string(),
                 country_name: "PSV München".to_string(),
+                date_of_birth: archer.date_of_birth().format("%Y-%m-%d").to_string(),
                 ..Default::default()
             })
             .returning(schema::archers::bib)
