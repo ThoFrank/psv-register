@@ -7,10 +7,12 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 lazy_static! {
-    pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
+    pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, strum::EnumIter)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, strum::EnumIter, PartialOrd,
+)]
 pub enum Class {
     R10,
     R11,
@@ -43,7 +45,6 @@ pub enum Class {
     C113,
     C114,
     C115,
-    OO,
 }
 
 impl Class {
@@ -80,14 +81,10 @@ impl Class {
             Class::C113 => "Compound Master w",
             Class::C114 => "Compound Senioren m",
             Class::C115 => "Compound Senioren w",
-            Class::OO => "Offene Klasse",
         }
     }
     pub fn comment(&self) -> &'static str {
-        match self{
-            Class::OO => "Eine Klasse für alle. Die Auflage ist größer als bei den offizielen Klassen. Dadurch ist eine Qualifikation zur Bezirksmeisterschaft ausgeschlossen.",
-            _ => "Reguläre Klasse nach Sportordnung. Eine Weitermeldung zur Bezirksmeisterschaft ist möglich"
-        }
+        ""
     }
     pub fn all_classes() -> impl Iterator<Item = Self> {
         Self::iter()
@@ -110,7 +107,6 @@ impl Class {
             Self::R13,
             Self::R14,
             Self::R15,
-            Self::OO,
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
@@ -121,7 +117,6 @@ impl Class {
             Self::B230,
             Self::B212,
             Self::B213,
-            Self::OO,
         ]
     }
     pub fn compound_classes() -> &'static [Self] {
@@ -135,7 +130,6 @@ impl Class {
             Self::C113,
             Self::C114,
             Self::C115,
-            Self::OO,
         ]
     }
     pub fn in_range(&self, dob: NaiveDate) -> bool {
@@ -171,7 +165,6 @@ impl Class {
             Class::B230 => (15, 17),
             Class::B212 => (50, 120),
             Class::B213 => (50, 120),
-            Class::OO => (15, 120),
         };
 
         let date_range = (*SEASON_START - Months::new(year_range.1 * 12))
@@ -188,6 +181,15 @@ impl Class {
         .filter(|c| c.in_range(dob))
         .copied()
         .collect()
+    }
+
+    // Price of starter in class in euro cent
+    pub fn price(&self) -> u32 {
+        use Class::*;
+        match self {
+            R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | B220 | B230 | C120 | C130 => 1200,
+            _ => 1800,
+        }
     }
 }
 

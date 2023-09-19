@@ -2,33 +2,36 @@ use crate::{error::*, schema, CONFIG, HANDLEBARS};
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use common::archer::{Archer, RegisteredArcher};
 use common::class::Class;
+use common::line_data::CreateArchersPayload;
 use diesel::prelude::*;
 use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
 use log::warn;
-use std::collections::BTreeMap;
 
 #[axum::debug_handler]
-pub async fn create_archer(Json(payload): Json<Archer>) -> Result<impl IntoResponse> {
-    println!("Received {} {}", payload.first_name, payload.last_name);
+pub async fn create_archers(
+    Json(payload): Json<CreateArchersPayload>,
+) -> Result<impl IntoResponse> {
+    // println!("Received {} {}", payload.first_name, payload.last_name);
+    let total_price: u32 = payload.archers.iter().map(|a| a.class().price()).sum();
+    let mail_data = EmailData {
+        comment: payload.comment.clone(),
+        club: payload.club.clone(),
+        mail_address: payload.mail.to_string(),
+        name: payload.name.clone(),
+        archers: payload.archers.iter().map(|a| a.into()).collect(),
+        total_price: format!("{},{}€", total_price / 100, total_price % 100),
+    };
 
-    let email_data = BTreeMap::from([
-        ("first_name", payload.first_name.clone()),
-        ("last_name", payload.last_name.clone()),
-        (
-            "date_of_birth",
-            payload.date_of_birth().format("%d.%m.%Y").to_string(),
-        ),
-        ("class", payload.class().name().to_owned()),
-        ("target_face", payload.target_face().to_string()),
-        ("comment", payload.comment.clone()),
-    ]);
-
-    let archer = payload.clone();
-    let save_task = tokio::task::spawn_blocking(move || save_archer(archer));
-    let (save, mail) = tokio::join!(save_task, send_registration_mail(&payload, email_data));
-
+    let archers = payload.archers.clone();
+    let save_task = tokio::task::spawn_blocking(move || {
+        archers
+            .into_iter()
+            .map(|archer| save_archer(archer))
+            .collect::<Result<Vec<()>>>()
+    });
+    let (save, mail) = tokio::join!(save_task, send_registration_mail(mail_data));
     save.unwrap()?;
     mail?;
 
@@ -81,10 +84,7 @@ fn save_archer(archer: Archer) -> Result<()> {
     })
 }
 
-async fn send_registration_mail(
-    archer: &Archer,
-    email_data: BTreeMap<&'static str, String>,
-) -> Result<()> {
+async fn send_registration_mail(email_data: EmailData) -> Result<()> {
     let credentials = Credentials::new(
         CONFIG.read().mail_server.smtp_username.clone(),
         CONFIG.read().mail_server.smtp_password.clone(),
@@ -108,8 +108,8 @@ async fn send_registration_mail(
                 .unwrap(),
         ))
         .to(Mailbox::new(
-            Some(format!("{} {}", archer.first_name, archer.last_name)),
-            archer.mail.as_str().parse().unwrap(),
+            Some(email_data.name.clone()),
+            email_data.mail_address.parse().unwrap(),
         ))
         .bcc(Mailbox::new(
             Some("Thomas Frank".to_string()),
@@ -144,6 +144,43 @@ impl From<crate::models::Archer> for RegisteredArcher {
             first_name: val.first_name,
             last_name: val.last_name,
             class: val.class.parse().unwrap(),
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize)]
+struct EmailData {
+    comment: String,
+    club: String,
+    mail_address: String,
+    name: String,
+    archers: Vec<EmailArcher>,
+    total_price: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct EmailArcher {
+    first_name: String,
+    last_name: String,
+    class: String,
+    target: String,
+    date_of_birth: String,
+    price: String,
+}
+
+impl From<&common::archer::Archer> for EmailArcher {
+    fn from(val: &common::archer::Archer) -> Self {
+        EmailArcher {
+            first_name: val.first_name.clone(),
+            last_name: val.last_name.clone(),
+            class: val.class().name().to_string(),
+            target: val.target_face().to_string(),
+            date_of_birth: val.date_of_birth().format("%Y-%m-%d").to_string(),
+            price: format!(
+                "{},{}€",
+                val.class().price() / 100,
+                val.class().price() % 100
+            ),
         }
     }
 }

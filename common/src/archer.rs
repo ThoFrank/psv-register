@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{class::Class, target_face::TargetFace};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Archer {
     pub first_name: String,
     pub last_name: String,
@@ -59,5 +59,15 @@ impl Archer {
     }
     pub fn target_face(&self) -> TargetFace {
         self.target_face
+    }
+}
+
+impl PartialOrd for Archer {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.class
+            .partial_cmp(&other.class)
+            .or_else(|| self.first_name.partial_cmp(&other.first_name))
+            .or_else(|| self.last_name.partial_cmp(&other.last_name))
+            .or_else(|| self.date_of_birth.partial_cmp(&self.date_of_birth))
     }
 }

@@ -70,7 +70,7 @@ async fn main() {
     };
     {
         let mut handlebars = HANDLEBARS.write();
-        handlebars.set_strict_mode(true);
+        // handlebars.set_strict_mode(true);
         handlebars.set_dev_mode(cfg!(debug_assertions));
         handlebars
             .register_template_file(
@@ -81,7 +81,7 @@ async fn main() {
     }
 
     let api = Router::new()
-        .route("/archers", post(archer::create_archer))
+        .route("/archers", post(archer::create_archers))
         .route("/archers", get(archer::list_archers));
     let app = Router::new()
         .nest_service("/", get(handler))

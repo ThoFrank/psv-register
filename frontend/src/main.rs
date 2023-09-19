@@ -84,7 +84,7 @@ impl Model {
             self.selected_target_face = *self
                 .possible_target_faces
                 .get(0)
-                .unwrap_or(&TargetFace::M70cm122);
+                .unwrap_or(&TargetFace::M18Spot);
         }
     }
 }
@@ -363,7 +363,13 @@ async fn post_participant(archer: common::archer::Archer) -> Msg {
     let url = BASE_URL.with(|base| base.borrow().clone().set_path(["api", "archers"]));
     let request = Request::new(url.to_string())
         .method(Method::Post)
-        .json(&archer)
+        .json(&common::line_data::CreateArchersPayload {
+            name: format!("{} {}", archer.first_name, archer.last_name),
+            mail: archer.mail.clone(),
+            comment: archer.comment.clone(),
+            club: "TODO".to_string(),
+            archers: vec![archer],
+        })
         .unwrap();
     let response = match fetch(request).await {
         Ok(r) => r,
