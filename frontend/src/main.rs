@@ -1,3 +1,7 @@
+mod archer;
+mod registrator;
+
+use archer::ArcherModel;
 use email_address::EmailAddress;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
@@ -8,18 +12,18 @@ use seed::{prelude::*, *};
 
 #[derive(Serialize, Deserialize)]
 struct Model {
-    first_name: String,
-    last_name: String,
-    date_of_birth: NaiveDate,
-    mail: InsertedMail,
-    bow_type: BowType,
-    cls: Option<Class>,
-    comment: String,
-
-    possible_target_faces: Vec<TargetFace>,
-    selected_target_face: TargetFace,
+    registrator: Registrator,
+    archers: Vec<ArcherModel>,
 
     submitting: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Registrator {
+    name: String,
+    mail: InsertedMail,
+    comment: String,
+    club: String,
 }
 
 thread_local! {
@@ -31,60 +35,14 @@ impl Model {
         let date = NaiveDate::default();
         let cls = Class::classes_for(date, BowType::Recurve)[0];
         Model {
-            first_name: String::new(),
-            last_name: String::new(),
-            date_of_birth: date,
-            mail: InsertedMail::Invalid(String::new()),
-            bow_type: BowType::Recurve,
-            cls: Some(cls),
-            comment: String::new(),
-            possible_target_faces: TargetFace::for_cls(cls).to_owned(),
-            selected_target_face: TargetFace::for_cls(cls)[0],
+            registrator: Registrator {
+                name: String::new(),
+                mail: InsertedMail::Invalid(String::new()),
+                comment: String::new(),
+                club: String::new(),
+            },
+            archers: vec![ArcherModel::default()],
             submitting: false,
-        }
-    }
-    fn check_and_update_cls(&mut self, orders: &mut impl Orders<Msg>) {
-        let available_classes: Vec<Class> = match self.bow_type {
-            BowType::Recurve => Class::recurve_classes(),
-            BowType::Compound => Class::compound_classes(),
-            BowType::Barebow => Class::barebow_classes(),
-        }
-        .iter()
-        .filter(|cls| cls.in_range(self.date_of_birth))
-        .copied()
-        .collect();
-
-        let new_cls = match (self.cls, available_classes.get(0)) {
-            (Some(cls), Some(&new)) => {
-                if available_classes.contains(&cls) {
-                    return;
-                } else {
-                    Some(new)
-                }
-            }
-            (_, None) => None,
-            (None, Some(&new)) => Some(new),
-        };
-
-        self.update_target_face();
-
-        orders.send_msg(Msg::ClassChanged(new_cls));
-        orders.force_render_now();
-    }
-    fn update_target_face(&mut self) {
-        self.possible_target_faces = if let Some(cls) = self.cls {
-            TargetFace::for_cls(cls).to_owned()
-        } else {
-            Vec::new()
-        };
-        if !self
-            .possible_target_faces
-            .contains(&self.selected_target_face)
-        {
-            self.selected_target_face = *self
-                .possible_target_faces
-                .get(0)
-                .unwrap_or(&TargetFace::M18Spot);
         }
     }
 }
@@ -128,8 +86,10 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         match serde_json::from_str::<Model>(&ser_model) {
             Ok(mut model) => {
                 model.submitting = false;
-                model.check_and_update_cls(orders);
-                model.update_target_face();
+                for (index, archer) in model.archers.iter_mut().enumerate() {
+                    archer.check_and_update_cls(index, orders);
+                    archer.update_target_face();
+                }
                 model
             }
             Err(_) => {
@@ -142,14 +102,12 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-enum Msg {
-    FirstNameChanged(String),
-    LastNameChanged(String),
-    DateOfBirthChanged(String),
+pub enum Msg {
+    ArcherMsg(usize, archer::ArcherMsg),
+    AddArcher,
+
+    NameChanged(String),
     MailChanged(String),
-    BowTypeChange(BowType),
-    ClassChanged(Option<Class>),
-    TargetFaceChanged(TargetFace),
     CommentChanged(String),
 
     Submit,
@@ -159,56 +117,41 @@ enum Msg {
 
 fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
-        Msg::FirstNameChanged(n) => model.first_name = n,
-        Msg::LastNameChanged(n) => model.last_name = n,
-        Msg::DateOfBirthChanged(dob) => {
-            model.date_of_birth = match chrono::NaiveDate::parse_from_str(&dob, "%Y-%m-%d") {
-                Ok(valid) => valid,
-                Err(e) => {
-                    seed::error!("Date of birth is not valid:", e);
-                    Default::default()
-                }
-            };
-            model.check_and_update_cls(orders);
-        }
         Msg::MailChanged(mail) => {
-            model.mail = if EmailAddress::is_valid(&mail) {
+            model.registrator.mail = if EmailAddress::is_valid(&mail) {
                 InsertedMail::Valid(mail)
             } else {
                 InsertedMail::Invalid(mail)
             }
         }
-        Msg::BowTypeChange(bt) => {
-            seed::log!("Selected bow type", bt);
-            model.bow_type = bt;
-            model.check_and_update_cls(orders);
-        }
-        Msg::ClassChanged(cls) => {
-            seed::log!("Selected cls", cls.map(|cls| cls.name()));
-            model.cls = cls;
-            model.update_target_face();
-        }
-        Msg::TargetFaceChanged(tf) => {
-            seed::log!("Selected target", tf);
-            model.selected_target_face = tf;
-        }
         Msg::Submit => {
             model.submitting = true;
-            orders.perform_cmd(post_participant(
-                common::archer::Archer::new(
-                    model.first_name.clone(),
-                    model.last_name.clone(),
-                    match &model.mail {
-                        InsertedMail::Invalid(_) => unreachable!(),
-                        InsertedMail::Valid(mail) => EmailAddress::from_str(mail).unwrap(),
-                    },
-                    model.date_of_birth,
-                    model.cls.expect("Submittion only possible if cls is set"),
-                    model.selected_target_face,
-                    model.comment.clone(),
-                )
-                .expect("It shouldn't be possible to produce invalid values"),
-            ));
+            let mail = match &model.registrator.mail {
+                InsertedMail::Invalid(_) => unreachable!(),
+                InsertedMail::Valid(mail) => EmailAddress::from_str(mail).unwrap(),
+            };
+            orders.perform_cmd(post_participants(common::line_data::CreateArchersPayload {
+                name: model.registrator.name.clone(),
+                mail: mail.clone(),
+                comment: model.registrator.comment.clone(),
+                club: model.registrator.club.clone(),
+                archers: model
+                    .archers
+                    .iter()
+                    .map(|a| {
+                        common::archer::Archer::new(
+                            a.first_name.clone(),
+                            a.last_name.clone(),
+                            mail.clone(),
+                            a.date_of_birth,
+                            a.cls.expect("Submission only possible if class is set"),
+                            a.selected_target_face,
+                            model.registrator.comment.clone(),
+                        )
+                        .expect("It shouldn't be possible to produce invalid values")
+                    })
+                    .collect(),
+            }));
         }
         Msg::RegistrationFailed(err) => {
             seed::window()
@@ -223,11 +166,18 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .ok();
             seed::log!("Submission ok!");
             *model = Model {
-                mail: model.mail.clone(),
+                registrator: model.registrator.clone(),
                 ..Model::new()
             }
         }
-        Msg::CommentChanged(c) => model.comment = c,
+        Msg::CommentChanged(c) => model.registrator.comment = c,
+        Msg::ArcherMsg(index, a_msg) => {
+            archer::update_archer(a_msg, index, &mut model.archers[index], orders)
+        }
+        Msg::AddArcher => {
+            model.archers.push(ArcherModel::default());
+        }
+        _ => todo!(),
     }
 
     if let Some(session_storage) = window().session_storage().ok().flatten() {
@@ -238,138 +188,142 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 }
 
 fn view(model: &Model) -> Node<Msg> {
-    let dob = model.date_of_birth;
-    let bow_type = model.bow_type;
+    // let dob = model.date_of_birth;
+    // let bow_type = model.bow_type;
     ul![
         C!("main"),
-        li!("Vorname:"),
-        li!(input!(
-            attrs!(At::Value => model.first_name),
-            input_ev(Ev::Input, Msg::FirstNameChanged)
-        )),
-        li!("Nachname:"),
-        li!(input!(
-            attrs!(At::Value => model.last_name),
-            input_ev(Ev::Input, Msg::LastNameChanged)
-        )),
-        li!("Email Adresse:"),
-        li!(
-            input!(
-                attrs!(At::Value => model.mail, At::Type => "email", At::Style => format!("color: {}", if model.mail.is_valid(){"black"} else {"red"}))
-            ),
-            input_ev(Ev::Input, Msg::MailChanged)
-        ),
-        li!("Geburtsdatum:"),
-        li!(input!(
-            attrs!(At::Value => model.date_of_birth, At::Type => "date", ),
-            input_ev(Ev::Input, Msg::DateOfBirthChanged)
-        )),
-        li!(br!()),
-        li!("Bogenart:"),
-        li!(
-            input!(
-                attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "recurve"),
-                if model.bow_type.is_recurve() {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Recurve))
-            ),
-            label!("Recurve", attrs!(At::For => "recurve")),
-            input!(
-                attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "blank"),
-                if model.bow_type.is_barebow() {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Barebow))
-            ),
-            label!("Blank", attrs!(At::For => "blank")),
-            input!(
-                attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "compound", ),
-                if model.bow_type.is_compound() {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Compound))
-            ),
-            label!("Compound", attrs!(At::For => "compound"))
-        ),
-        li!(em!(match model.bow_type {
-            BowType::Recurve => "Der Recurve-Bogen ist am weitesten verbreitet. Er hat ein Visier und optional ein Stabilisationssystem und einen Klicker",
-            BowType::Compound => "Der Compound-Bogen ist einfach zu erkennen an den Rollen am oberen und unteren Ende, welche das Haltegewicht im Vollauszug reduzieren.",
-            BowType::Barebow => "Der Blank-Bogen ist der einfachste Bogen. Hier ist kein Visier erlaubt. Auch andere Anbauten sind stark reglementiert.",
-        })),
-        li!(br!()),
-        li!("Klasse:"),
-        li!(
-            attrs!(At::Name => "cls"),
-            select!(
-                attrs!(At::Name => "Class",At::AutoComplete => "off", At::Required => AtValue::None),
-                model.cls.map(|cls| attrs!(At::Value => cls.name())),
-                match model.bow_type {
-                    BowType::Recurve => Class::recurve_classes(),
-                    BowType::Compound => Class::compound_classes(),
-                    BowType::Barebow => Class::barebow_classes(),
-                }
-                .iter()
-                .filter(|cls| cls.in_range(model.date_of_birth))
-                .map(|cls| option!(
-                    cls.name(),
-                    attrs!(At::Value => cls.name()),
-                    IF!(Some(*cls) == model.cls => attrs!(At::Selected => AtValue::None)),
-                    ev(Ev::Input, |_| { Msg::ClassChanged(Some(*cls)) })
-                ))
-                .collect::<Vec<_>>(),
-                input_ev(Ev::Input, move |cls_name| {
-                    Msg::ClassChanged(
-                        Some(Class::classes_for(dob, bow_type)
-                            .into_iter()
-                            .find(|cls| cls.name() == cls_name)
-                            .unwrap()),
-                    )
-                })
-            )
-        ),
-        li!(em!(model.cls.map(|cls| cls.comment()))),
-        li!(br!()),
-        li!("Scheibe:"),
-        li!(
-            model.possible_target_faces.iter().map(|&tf| div![
-                input!(attrs!(At::Type => "radio", At::Name => "target_face", At::Id => format!("{}", tf)), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),
-                label!(format!("{}", tf), attrs!(At::For => format!("{}", tf)))
-            ]),
+        registrator::view_registrator(&model.registrator),
+        model
+            .archers
+            .iter()
+            .enumerate()
+            .map(|(index, archer)| { li!(archer::archer_view(archer, index)) }),
+        // li!("Vorname:"),
+        // li!(input!(
+        //     attrs!(At::Value => model.first_name),
+        //     input_ev(Ev::Input, Msg::FirstNameChanged)
+        // )),
+        // li!("Nachname:"),
+        // li!(input!(
+        //     attrs!(At::Value => model.last_name),
+        //     input_ev(Ev::Input, Msg::LastNameChanged)
+        // )),
+        // li!("Email Adresse:"),
+        // li!(
+        //     input!(
+        //         attrs!(At::Value => model.mail, At::Type => "email", At::Style => format!("color: {}", if model.mail.is_valid(){"black"} else {"red"}))
+        //     ),
+        //     input_ev(Ev::Input, Msg::MailChanged)
+        // ),
+        // li!("Geburtsdatum:"),
+        // li!(input!(
+        //     attrs!(At::Value => model.date_of_birth, At::Type => "date", ),
+        //     input_ev(Ev::Input, Msg::DateOfBirthChanged)
+        // )),
+        // li!(br!()),
+        // li!("Bogenart:"),
+        // li!(
+        //     input!(
+        //         attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "recurve"),
+        //         if model.bow_type.is_recurve() {
+        //             Some(attrs!("checked" => AtValue::None))
+        //         } else {
+        //             None
+        //         },
+        //         input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Recurve))
+        //     ),
+        //     label!("Recurve", attrs!(At::For => "recurve")),
+        //     input!(
+        //         attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "blank"),
+        //         if model.bow_type.is_barebow() {
+        //             Some(attrs!("checked" => AtValue::None))
+        //         } else {
+        //             None
+        //         },
+        //         input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Barebow))
+        //     ),
+        //     label!("Blank", attrs!(At::For => "blank")),
+        //     input!(
+        //         attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "compound", ),
+        //         if model.bow_type.is_compound() {
+        //             Some(attrs!("checked" => AtValue::None))
+        //         } else {
+        //             None
+        //         },
+        //         input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Compound))
+        //     ),
+        //     label!("Compound", attrs!(At::For => "compound"))
+        // ),
+        // li!(em!(match model.bow_type {
+        //     BowType::Recurve => "Der Recurve-Bogen ist am weitesten verbreitet. Er hat ein Visier und optional ein Stabilisationssystem und einen Klicker",
+        //     BowType::Compound => "Der Compound-Bogen ist einfach zu erkennen an den Rollen am oberen und unteren Ende, welche das Haltegewicht im Vollauszug reduzieren.",
+        //     BowType::Barebow => "Der Blank-Bogen ist der einfachste Bogen. Hier ist kein Visier erlaubt. Auch andere Anbauten sind stark reglementiert.",
+        // })),
+        // li!(br!()),
+        // li!("Klasse:"),
+        // li!(
+        //     attrs!(At::Name => "cls"),
+        //     select!(
+        //         attrs!(At::Name => "Class",At::AutoComplete => "off", At::Required => AtValue::None),
+        //         model.cls.map(|cls| attrs!(At::Value => cls.name())),
+        //         match model.bow_type {
+        //             BowType::Recurve => Class::recurve_classes(),
+        //             BowType::Compound => Class::compound_classes(),
+        //             BowType::Barebow => Class::barebow_classes(),
+        //         }
+        //         .iter()
+        //         .filter(|cls| cls.in_range(model.date_of_birth))
+        //         .map(|cls| option!(
+        //             cls.name(),
+        //             attrs!(At::Value => cls.name()),
+        //             IF!(Some(*cls) == model.cls => attrs!(At::Selected => AtValue::None)),
+        //             ev(Ev::Input, |_| { Msg::ClassChanged(Some(*cls)) })
+        //         ))
+        //         .collect::<Vec<_>>(),
+        //         input_ev(Ev::Input, move |cls_name| {
+        //             Msg::ClassChanged(
+        //                 Some(Class::classes_for(dob, bow_type)
+        //                     .into_iter()
+        //                     .find(|cls| cls.name() == cls_name)
+        //                     .unwrap()),
+        //             )
+        //         })
+        //     )
+        // ),
+        // li!(em!(model.cls.map(|cls| cls.comment()))),
+        // li!(br!()),
+        // li!("Scheibe:"),
+        // li!(
+        //     model.possible_target_faces.iter().map(|&tf| div![
+        //         input!(attrs!(At::Type => "radio", At::Name => "target_face", At::Id => format!("{}", tf)), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),
+        //         label!(format!("{}", tf), attrs!(At::For => format!("{}", tf)))
+        //     ]),
 
-        ),
-        li!(br!()),
-        li!("Kommentar:"),
-        li!(textarea!(
-            attrs!(At::Value => model.comment),
-            input_ev(Ev::Input, Msg::CommentChanged)
-        )),
-        li!(br!()),
+        // ),
+        // li!(br!()),
+        // li!("Kommentar:"),
+        // li!(textarea!(
+        //     attrs!(At::Value => model.comment),
+        //     input_ev(Ev::Input, Msg::CommentChanged)
+        // )),
+        // li!(br!()),
+        // li!(button!(
+        //     "Anmelden",
+        //     IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() || model.submitting => attrs!(At::Disabled => AtValue::None)),
+        //     input_ev(Ev::Click, |_| Msg::Submit)
+        // ))
         li!(button!(
-            "Anmelden",
-            IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() || model.submitting => attrs!(At::Disabled => AtValue::None)),
-            input_ev(Ev::Click, |_| Msg::Submit)
+            "Zusätzlicher Eintrag",
+            input_ev(Ev::Click, |_| Msg::AddArcher)
         ))
     ]
 }
 
-async fn post_participant(archer: common::archer::Archer) -> Msg {
+async fn post_participants(data: common::line_data::CreateArchersPayload) -> Msg {
     let url = BASE_URL.with(|base| base.borrow().clone().set_path(["api", "archers"]));
     let request = Request::new(url.to_string())
         .method(Method::Post)
-        .json(&common::line_data::CreateArchersPayload {
-            name: format!("{} {}", archer.first_name, archer.last_name),
-            mail: archer.mail.clone(),
-            comment: archer.comment.clone(),
-            club: "TODO".to_string(),
-            archers: vec![archer],
-        })
+        .json(&data)
         .unwrap();
     let response = match fetch(request).await {
         Ok(r) => r,
