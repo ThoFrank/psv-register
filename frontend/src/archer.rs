@@ -60,6 +60,11 @@ impl ArcherModel {
         self.update_target_face();
 
         orders.send_msg(Msg::ArcherMsg(index, ArcherMsg::ClassChanged(new_cls)));
+        orders.force_render_now();
+    }
+
+    pub fn ready_for_submission(&self) -> bool {
+        !self.first_name.is_empty() && !self.last_name.is_empty() && self.cls.is_some()
     }
 }
 impl Default for ArcherModel {
@@ -92,7 +97,10 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
     let bow_type = model.bow_type;
     p![
         C!("archer"),
-        li!(h3!(format!("Schütze {}:", index + 1))),
+        li!(p![
+            h3!(format!("Schütze {}:", index + 1)),
+            button!("Löschen", input_ev(Ev::Click, move |_| Msg::RemoveArcher(index)))
+        ]),
         li!("Vorname:"),
         li!(input!(
             attrs!(At::Value => model.first_name),
@@ -111,7 +119,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
         )),
         li!("Geburtsdatum:"),
         li!(input!(
-            attrs!(At::Value => model.date_of_birth, At::Type => "date", ),
+            attrs!(At::Value => model.date_of_birth, At::Type => format!("date{}", index), ),
             input_ev(Ev::Input, move |s| Msg::ArcherMsg(
                 index,
                 ArcherMsg::DateOfBirthChanged(s)
@@ -121,7 +129,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
         li!("Bogenart:"),
         li!(
             input!(
-                attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "recurve"),
+                attrs!(At::Type => "radio", At::Name => format!("bow_type{}", index), At::Id => format!("recurve{}",index)),
                 if model.bow_type.is_recurve() {
                     Some(attrs!("checked" => AtValue::None))
                 } else {
@@ -132,10 +140,10 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::BowTypeChange(BowType::Recurve)
                 ))
             ),
-            label!("Recurve", attrs!(At::For => "recurve")),
+            label!("Recurve", attrs!(At::For => format!("recurve{}", index))),
             br!(),
             input!(
-                attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "blank"),
+                attrs!(At::Type => "radio", At::Name => format!("bow_type{}", index), At::Id => format!("blank{}", index)),
                 if model.bow_type.is_barebow() {
                     Some(attrs!("checked" => AtValue::None))
                 } else {
@@ -146,10 +154,10 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::BowTypeChange(BowType::Barebow)
                 ))
             ),
-            label!("Blank", attrs!(At::For => "blank")),
+            label!("Blank", attrs!(At::For => format!("blank{}", index))),
             br!(),
             input!(
-                attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "compound", ),
+                attrs!(At::Type => "radio", At::Name => format!("bow_type{}", index), At::Id => format!("compound{}",index), ),
                 if model.bow_type.is_compound() {
                     Some(attrs!("checked" => AtValue::None))
                 } else {
@@ -160,7 +168,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::BowTypeChange(BowType::Compound)
                 ))
             ),
-            label!("Compound", attrs!(At::For => "compound"))
+            label!("Compound", attrs!(At::For => format!("compound{}", index)))
         ),
         li!(br!()),
         li!("Klasse:"),
@@ -202,14 +210,14 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
         li!("Scheibe:"),
         li!(model.possible_target_faces.iter().map(|&tf| div![
             input!(
-                attrs!(At::Type => "radio", At::Name => "target_face", At::Id => format!("{}", tf)),
+                attrs!(At::Type => "radio", At::Name => format!("target_face{}", index), At::Id => format!("{}-{}", tf, index)),
                 IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),
                 input_ev(Ev::Input, move |_| Msg::ArcherMsg(
                     index,
                     ArcherMsg::TargetFaceChanged(tf)
                 ))
             ),
-            label!(format!("{}", tf), attrs!(At::For => format!("{}", tf)))
+            label!(format!("{}", tf), attrs!(At::For => format!("{}-{}", tf, index)))
         ]),),
     ]
 }

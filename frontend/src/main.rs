@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
 
 use chrono::prelude::*;
-use common::{bow_type::BowType, class::Class, target_face::TargetFace};
 use seed::{prelude::*, *};
 
 #[derive(Serialize, Deserialize)]
@@ -32,8 +31,6 @@ thread_local! {
 
 impl Model {
     fn new() -> Self {
-        let date = NaiveDate::default();
-        let cls = Class::classes_for(date, BowType::Recurve)[0];
         Model {
             registrator: Registrator {
                 name: String::new(),
@@ -105,6 +102,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
 pub enum Msg {
     ArcherMsg(usize, archer::ArcherMsg),
     AddArcher,
+    RemoveArcher(usize),
 
     NameChanged(String),
     MailChanged(String),
@@ -177,7 +175,12 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::AddArcher => {
             model.archers.push(ArcherModel::default());
         }
-        _ => todo!(),
+        Msg::RemoveArcher(index) => {
+            model.archers.remove(index);
+        }
+        Msg::NameChanged(name) => {
+            model.registrator.name = name;
+        }
     }
 
     if let Some(session_storage) = window().session_storage().ok().flatten() {
@@ -198,123 +201,15 @@ fn view(model: &Model) -> Node<Msg> {
             .iter()
             .enumerate()
             .map(|(index, archer)| { li!(archer::archer_view(archer, index)) }),
-        // li!("Vorname:"),
-        // li!(input!(
-        //     attrs!(At::Value => model.first_name),
-        //     input_ev(Ev::Input, Msg::FirstNameChanged)
-        // )),
-        // li!("Nachname:"),
-        // li!(input!(
-        //     attrs!(At::Value => model.last_name),
-        //     input_ev(Ev::Input, Msg::LastNameChanged)
-        // )),
-        // li!("Email Adresse:"),
-        // li!(
-        //     input!(
-        //         attrs!(At::Value => model.mail, At::Type => "email", At::Style => format!("color: {}", if model.mail.is_valid(){"black"} else {"red"}))
-        //     ),
-        //     input_ev(Ev::Input, Msg::MailChanged)
-        // ),
-        // li!("Geburtsdatum:"),
-        // li!(input!(
-        //     attrs!(At::Value => model.date_of_birth, At::Type => "date", ),
-        //     input_ev(Ev::Input, Msg::DateOfBirthChanged)
-        // )),
-        // li!(br!()),
-        // li!("Bogenart:"),
-        // li!(
-        //     input!(
-        //         attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "recurve"),
-        //         if model.bow_type.is_recurve() {
-        //             Some(attrs!("checked" => AtValue::None))
-        //         } else {
-        //             None
-        //         },
-        //         input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Recurve))
-        //     ),
-        //     label!("Recurve", attrs!(At::For => "recurve")),
-        //     input!(
-        //         attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "blank"),
-        //         if model.bow_type.is_barebow() {
-        //             Some(attrs!("checked" => AtValue::None))
-        //         } else {
-        //             None
-        //         },
-        //         input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Barebow))
-        //     ),
-        //     label!("Blank", attrs!(At::For => "blank")),
-        //     input!(
-        //         attrs!(At::Type => "radio", At::Name => "bow_type", At::Id => "compound", ),
-        //         if model.bow_type.is_compound() {
-        //             Some(attrs!("checked" => AtValue::None))
-        //         } else {
-        //             None
-        //         },
-        //         input_ev(Ev::Input, |_| Msg::BowTypeChange(BowType::Compound))
-        //     ),
-        //     label!("Compound", attrs!(At::For => "compound"))
-        // ),
-        // li!(em!(match model.bow_type {
-        //     BowType::Recurve => "Der Recurve-Bogen ist am weitesten verbreitet. Er hat ein Visier und optional ein Stabilisationssystem und einen Klicker",
-        //     BowType::Compound => "Der Compound-Bogen ist einfach zu erkennen an den Rollen am oberen und unteren Ende, welche das Haltegewicht im Vollauszug reduzieren.",
-        //     BowType::Barebow => "Der Blank-Bogen ist der einfachste Bogen. Hier ist kein Visier erlaubt. Auch andere Anbauten sind stark reglementiert.",
-        // })),
-        // li!(br!()),
-        // li!("Klasse:"),
-        // li!(
-        //     attrs!(At::Name => "cls"),
-        //     select!(
-        //         attrs!(At::Name => "Class",At::AutoComplete => "off", At::Required => AtValue::None),
-        //         model.cls.map(|cls| attrs!(At::Value => cls.name())),
-        //         match model.bow_type {
-        //             BowType::Recurve => Class::recurve_classes(),
-        //             BowType::Compound => Class::compound_classes(),
-        //             BowType::Barebow => Class::barebow_classes(),
-        //         }
-        //         .iter()
-        //         .filter(|cls| cls.in_range(model.date_of_birth))
-        //         .map(|cls| option!(
-        //             cls.name(),
-        //             attrs!(At::Value => cls.name()),
-        //             IF!(Some(*cls) == model.cls => attrs!(At::Selected => AtValue::None)),
-        //             ev(Ev::Input, |_| { Msg::ClassChanged(Some(*cls)) })
-        //         ))
-        //         .collect::<Vec<_>>(),
-        //         input_ev(Ev::Input, move |cls_name| {
-        //             Msg::ClassChanged(
-        //                 Some(Class::classes_for(dob, bow_type)
-        //                     .into_iter()
-        //                     .find(|cls| cls.name() == cls_name)
-        //                     .unwrap()),
-        //             )
-        //         })
-        //     )
-        // ),
-        // li!(em!(model.cls.map(|cls| cls.comment()))),
-        // li!(br!()),
-        // li!("Scheibe:"),
-        // li!(
-        //     model.possible_target_faces.iter().map(|&tf| div![
-        //         input!(attrs!(At::Type => "radio", At::Name => "target_face", At::Id => format!("{}", tf)), IF!(model.selected_target_face == tf => attrs!(At::Checked => AtValue::None)),input_ev(Ev::Input, move |_| Msg::TargetFaceChanged(tf))),
-        //         label!(format!("{}", tf), attrs!(At::For => format!("{}", tf)))
-        //     ]),
-
-        // ),
-        // li!(br!()),
-        // li!("Kommentar:"),
-        // li!(textarea!(
-        //     attrs!(At::Value => model.comment),
-        //     input_ev(Ev::Input, Msg::CommentChanged)
-        // )),
-        // li!(br!()),
-        // li!(button!(
-        //     "Anmelden",
-        //     IF!(model.first_name.is_empty() || model.last_name.is_empty() || !model.mail.is_valid() || model.cls.is_none() || model.submitting => attrs!(At::Disabled => AtValue::None)),
-        //     input_ev(Ev::Click, |_| Msg::Submit)
-        // ))
         li!(button!(
-            "Zusätzlicher Eintrag",
+            "Zusätzlicher Schütze",
             input_ev(Ev::Click, |_| Msg::AddArcher)
+        )),
+        li!(br!()),
+        li!(button!(
+            "Anmelden",
+            IF!(model.archers.is_empty() || model.archers.iter().any(|a| !a.ready_for_submission()) || !model.registrator.mail.is_valid() || model.submitting => attrs!(At::Disabled => AtValue::None)),
+            input_ev(Ev::Click, |_| Msg::Submit)
         ))
     ]
 }
