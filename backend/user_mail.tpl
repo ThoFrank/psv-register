@@ -2,6 +2,9 @@ Hallo {{name}},
 
 vielen Dank für die Meldung für {{club}} zum PSV Indoor Turnier 2024.
 
+angegebener Kommentar:
+{{comment}}
+
 Folgene Schützen wurden eingetragen:
 
 {{#each archers}}

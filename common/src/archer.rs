@@ -10,6 +10,7 @@ pub struct Archer {
     pub last_name: String,
     pub mail: EmailAddress,
     pub comment: String,
+    pub club: String,
     date_of_birth: NaiveDate,
     class: Class,
     target_face: TargetFace,
@@ -31,6 +32,7 @@ impl Archer {
         cls: Class,
         target_face: TargetFace,
         comment: String,
+        club: String,
     ) -> Result<Self, ()> {
         if !Class::all_classes()
             .filter(|c| c.in_range(dob))
@@ -49,6 +51,7 @@ impl Archer {
             class: cls,
             target_face,
             comment,
+            club,
         })
     }
     pub fn date_of_birth(&self) -> NaiveDate {

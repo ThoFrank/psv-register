@@ -64,8 +64,8 @@ fn save_archer(archer: Archer) -> Result<()> {
                 last_name: archer.last_name.clone(),
                 first_name: archer.first_name.clone(),
                 gender: None,
-                country_code: "PSV".to_string(),
-                country_name: "PSV München".to_string(),
+                country_code: "TODO".to_string(),
+                country_name: archer.club.clone(),
                 date_of_birth: archer.date_of_birth().format("%Y-%m-%d").to_string(),
                 ..Default::default()
             })
