@@ -105,6 +105,7 @@ pub enum Msg {
     RemoveArcher(usize),
 
     NameChanged(String),
+    ClubChanged(String),
     MailChanged(String),
     CommentChanged(String),
 
@@ -181,6 +182,9 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::NameChanged(name) => {
             model.registrator.name = name;
         }
+        Msg::ClubChanged(club) => {
+            model.registrator.club = club;
+        }
     }
 
     if let Some(session_storage) = window().session_storage().ok().flatten() {
@@ -194,21 +198,22 @@ fn view(model: &Model) -> Node<Msg> {
     // let dob = model.date_of_birth;
     // let bow_type = model.bow_type;
     ul![
-        C!("main"),
+        C!("list"),
         registrator::view_registrator(&model.registrator),
+        hr!(),
         model
             .archers
             .iter()
             .enumerate()
-            .map(|(index, archer)| { li!(archer::archer_view(archer, index)) }),
+            .map(|(index, archer)| { p!(li!(archer::archer_view(archer, index)), hr!()) }),
         li!(button!(
-            "Zusätzlicher Schütze",
+            "Schützen Hinzufügen",
             input_ev(Ev::Click, |_| Msg::AddArcher)
         )),
         li!(br!()),
         li!(button!(
-            "Anmelden",
-            IF!(model.archers.is_empty() || model.archers.iter().any(|a| !a.ready_for_submission()) || !model.registrator.mail.is_valid() || model.submitting => attrs!(At::Disabled => AtValue::None)),
+            "Anmeldung Einreichen",
+            IF!(model.archers.is_empty() || model.archers.iter().any(|a| !a.ready_for_submission()) || model.registrator.club.is_empty() || !model.registrator.mail.is_valid() || model.submitting => attrs!(At::Disabled => AtValue::None)),
             input_ev(Ev::Click, |_| Msg::Submit)
         ))
     ]

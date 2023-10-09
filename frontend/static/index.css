@@ -44,8 +44,9 @@ a {
   padding: 0;
 }
 
-ul.main{
+ul.list{
 	list-style-type: none;
+  padding: 0;
 }
 
 em {
@@ -151,10 +152,19 @@ em {
 	box-shadow: inset 0 -2px 1px rgba(0,0,0,0.03);
 }
 
-.main {
+.list {
 	position: relative;
 	z-index: 2;
 	border-top: 1px solid #e6e6e6;
+}
+
+li.horizontal {
+	display: inline-block;
+}
+
+ul.flex {
+	display: flex;
+	justify-content: space-between;
 }
 
 .toggle-all {

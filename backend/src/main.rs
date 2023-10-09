@@ -25,7 +25,11 @@ mod schema;
 pub static mut CONFIG: Config = Config::default();
 
 #[dynamic()]
-pub static mut HANDLEBARS: Handlebars<'static> = Handlebars::new();
+pub static mut HANDLEBARS: Handlebars<'static> = {
+    let mut hlbs = Handlebars::new();
+    hlbs.set_strict_mode(true);
+    hlbs
+};
 
 #[derive(Parser, Debug)]
 struct CliArgs {

@@ -21,7 +21,7 @@ pub async fn create_archers(
         mail_address: payload.mail.to_string(),
         name: payload.name.clone(),
         archers: payload.archers.iter().map(|a| a.into()).collect(),
-        total_price: format!("{},{}€", total_price / 100, total_price % 100),
+        total_price: format!("{},{:02}€", total_price / 100, total_price % 100),
     };
 
     let archers = payload.archers.clone();
@@ -177,7 +177,7 @@ impl From<&common::archer::Archer> for EmailArcher {
             target: val.target_face().to_string(),
             date_of_birth: val.date_of_birth().format("%Y-%m-%d").to_string(),
             price: format!(
-                "{},{}€",
+                "{},{:02}€",
                 val.class().price() / 100,
                 val.class().price() % 100
             ),

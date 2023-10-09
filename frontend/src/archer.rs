@@ -97,10 +97,17 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
     let bow_type = model.bow_type;
     p![
         C!("archer"),
-        li!(p![
-            h3!(format!("Schütze {}:", index + 1)),
-            button!("Löschen", input_ev(Ev::Click, move |_| Msg::RemoveArcher(index)))
-        ]),
+        ul!(
+            C!("list flex"),
+            li!(
+                C!("horizontal"),
+                h3!(format!("Schütze {}:", index + 1))
+            ),
+            li!(
+                C!("horizontal"),
+                button!("Löschen", input_ev(Ev::Click, move |_| Msg::RemoveArcher(index)))
+            )
+        ),
         li!("Vorname:"),
         li!(input!(
             attrs!(At::Value => model.first_name),
@@ -119,7 +126,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
         )),
         li!("Geburtsdatum:"),
         li!(input!(
-            attrs!(At::Value => model.date_of_birth, At::Type => format!("date{}", index), ),
+            attrs!(At::Value => model.date_of_birth, At::Type => "date" ),
             input_ev(Ev::Input, move |s| Msg::ArcherMsg(
                 index,
                 ArcherMsg::DateOfBirthChanged(s)

@@ -4,11 +4,17 @@ use crate::Msg;
 
 pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
     ul![
+        C!("list"),
         li!(h3!["Melder:"]),
-        li!("Name:"),
+        li!("Name des Melders:"),
         li!(input!(
             attrs!(At::Value => model.name),
             input_ev(Ev::Input, Msg::NameChanged)
+        )),
+        li!("Versinsname:"),
+        li!(input!(
+            attrs!(At::Value => model.club),
+            input_ev(Ev::Input, Msg::ClubChanged)
         )),
         li!("Mail-Adresse:"),
         li!(input!(
