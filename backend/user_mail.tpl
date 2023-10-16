@@ -10,6 +10,7 @@ Folgene Schützen wurden eingetragen:
 {{#each archers}}
 Name: {{this.first_name}} {{this.last_name}}
 Geburtsdatum: {{this.date_of_birth}}
+Gruppe: {{this.session}}
 Klasse: {{this.class}} ({{this.price}})
 Scheibe: {{this.target}}
 

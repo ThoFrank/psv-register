@@ -2,6 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::bow_type::BowType;
 use chrono::{Months, NaiveDate};
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
@@ -11,7 +12,7 @@ lazy_static! {
 }
 
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, strum::EnumIter, PartialOrd,
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, strum::EnumIter, PartialOrd, Hash,
 )]
 pub enum Class {
     R10,
@@ -28,8 +29,6 @@ pub enum Class {
     R41,
     R12,
     R13,
-    R14,
-    R15,
     B210,
     B211,
     B220,
@@ -40,11 +39,8 @@ pub enum Class {
     C111,
     C120,
     C130,
-    C140,
     C112,
     C113,
-    C114,
-    C115,
 }
 
 impl Class {
@@ -64,23 +60,18 @@ impl Class {
             Class::R41 => "Recurve Junioren w",
             Class::R12 => "Recurve Master m",
             Class::R13 => "Recurve Master w",
-            Class::R14 => "Recurve Senioren m",
-            Class::R15 => "Recurve Senioren w",
             Class::B210 => "Blank Herren",
             Class::B211 => "Blank Damen",
             Class::B220 => "Blank Schüler m/w",
-            Class::B230 => "Blank Jugend m/m",
+            Class::B230 => "Blank Jugend/Junioren m/w",
             Class::B212 => "Blank Master m",
             Class::B213 => "Blank Master w",
             Class::C110 => "Compound Herren",
             Class::C111 => "Compound Damen",
             Class::C120 => "Compound Schüler m/w",
-            Class::C130 => "Compound Jugend m/m",
-            Class::C140 => "Compound Junioren m/w",
+            Class::C130 => "Compound Jugend/Junioren m/w",
             Class::C112 => "Compound Master m",
             Class::C113 => "Compound Master w",
-            Class::C114 => "Compound Senioren m",
-            Class::C115 => "Compound Senioren w",
         }
     }
     pub fn comment(&self) -> &'static str {
@@ -105,8 +96,6 @@ impl Class {
             Self::R41,
             Self::R12,
             Self::R13,
-            Self::R14,
-            Self::R15,
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
@@ -125,11 +114,8 @@ impl Class {
             Self::C111,
             Self::C120,
             Self::C130,
-            Self::C140,
             Self::C112,
             Self::C113,
-            Self::C114,
-            Self::C115,
         ]
     }
     pub fn in_range(&self, dob: NaiveDate) -> bool {
@@ -146,23 +132,20 @@ impl Class {
             Class::R31 => (15, 17),
             Class::R40 => (18, 20),
             Class::R41 => (18, 20),
-            Class::R12 => (50, 65),
-            Class::R13 => (50, 65),
-            Class::R14 => (66, 120),
-            Class::R15 => (66, 120),
+            Class::R12 => (50, 120),
+            Class::R13 => (50, 120),
+
             Class::C110 => (21, 49),
             Class::C111 => (21, 49),
             Class::C120 => (1, 14),
-            Class::C130 => (15, 17),
-            Class::C140 => (18, 20),
-            Class::C112 => (50, 65),
-            Class::C113 => (50, 65),
-            Class::C114 => (66, 120),
-            Class::C115 => (66, 120),
-            Class::B210 => (18, 49),
-            Class::B211 => (18, 49),
+            Class::C130 => (15, 20),
+            Class::C112 => (50, 120),
+            Class::C113 => (50, 120),
+
+            Class::B210 => (21, 49),
+            Class::B211 => (21, 49),
             Class::B220 => (1, 14),
-            Class::B230 => (15, 17),
+            Class::B230 => (15, 20),
             Class::B212 => (50, 120),
             Class::B213 => (50, 120),
         };
@@ -170,17 +153,6 @@ impl Class {
         let date_range = (*SEASON_START - Months::new(year_range.1 * 12))
             ..(*SEASON_START - Months::new((year_range.0 - 1) * 12));
         date_range.contains(&dob)
-    }
-    pub fn classes_for(dob: NaiveDate, bow_type: BowType) -> Vec<Class> {
-        match bow_type {
-            BowType::Recurve => Self::recurve_classes(),
-            BowType::Compound => Self::compound_classes(),
-            BowType::Barebow => Self::barebow_classes(),
-        }
-        .iter()
-        .filter(|c| c.in_range(dob))
-        .copied()
-        .collect()
     }
 
     // Price of starter in class in euro cent
@@ -191,6 +163,51 @@ impl Class {
             _ => 1800,
         }
     }
+
+    pub fn allowed_classes(bow_type: BowType, dob: NaiveDate) -> Vec<(Class, ClassUpgradeStatus)> {
+        let default_classes = match bow_type {
+            BowType::Recurve => Class::recurve_classes(),
+            BowType::Compound => Class::compound_classes(),
+            BowType::Barebow => Class::barebow_classes(),
+        }
+        .iter()
+        .filter(|cls| cls.in_range(dob));
+
+        let upgrade_classes = default_classes
+            .clone()
+            .map(|dc| dc.other_allowed_classes().into_iter())
+            .flatten()
+            .unique();
+        default_classes
+            .map(|&c| (c, ClassUpgradeStatus::InDefaultAgeRange))
+            .chain(upgrade_classes.map(|&c| (c, ClassUpgradeStatus::Upgrade)))
+            .collect()
+    }
+
+    fn other_allowed_classes(&self) -> &'static [Self] {
+        use Class::*;
+        match self {
+            // Junioren + Master => Herren/Damen
+            R40 | R12 => &[R10],
+            R41 | R13 => &[R11],
+
+            B230 => &[B210, B211],
+            B212 => &[B210],
+            B213 => &[B211],
+
+            C120 => &[C110, C111],
+            C112 => &[C110],
+            C113 => &[C111],
+
+            _ => &[],
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ClassUpgradeStatus {
+    InDefaultAgeRange,
+    Upgrade,
 }
 
 impl FromStr for Class {

@@ -47,7 +47,7 @@ fn save_archer(archer: Archer) -> Result<()> {
     connection.transaction(|conn| -> Result<()> {
         let inserted_bib: i32 = diesel::insert_into(schema::archers::table)
             .values(crate::models::InsertableArcher {
-                session: 1,
+                session: archer.session as i32 + 1,
                 division: match archer.class() {
                     c if Class::recurve_classes().contains(&c) => "R".to_string(),
                     c if Class::barebow_classes().contains(&c) => "B".to_string(),
@@ -107,6 +107,10 @@ async fn send_registration_mail(email_data: EmailData) -> Result<()> {
                 })
                 .unwrap(),
         ))
+        .reply_to(Mailbox::new(
+            Some("Tobias Edlböck".to_string()),
+            "indoor@bogen-psv.de".parse().unwrap(),
+        ))
         .to(Mailbox::new(
             Some(email_data.name.clone()),
             email_data.mail_address.parse().unwrap(),
@@ -114,6 +118,10 @@ async fn send_registration_mail(email_data: EmailData) -> Result<()> {
         .bcc(Mailbox::new(
             Some("Thomas Frank".to_string()),
             "sport@bogen-psv.de".parse().unwrap(),
+        ))
+        .bcc(Mailbox::new(
+            Some("Tobias Edlböck".to_string()),
+            "indoor@bogen-psv.de".parse().unwrap(),
         ))
         .header(lettre::message::header::ContentType::TEXT_PLAIN)
         .subject(&CONFIG.read().mail_message.subject)
@@ -144,6 +152,7 @@ impl From<crate::models::Archer> for RegisteredArcher {
             first_name: val.first_name,
             last_name: val.last_name,
             class: val.class.parse().unwrap(),
+            session: val.session as u8,
         }
     }
 }
@@ -162,6 +171,7 @@ struct EmailData {
 struct EmailArcher {
     first_name: String,
     last_name: String,
+    session: String,
     class: String,
     target: String,
     date_of_birth: String,
@@ -170,10 +180,34 @@ struct EmailArcher {
 
 impl From<&common::archer::Archer> for EmailArcher {
     fn from(val: &common::archer::Archer) -> Self {
+        use Class::*;
         EmailArcher {
             first_name: val.first_name.clone(),
             last_name: val.last_name.clone(),
-            class: val.class().name().to_string(),
+            session: match val.session {
+                0 => "Vormittag".into(),
+                1 => "Nachmittag".into(),
+                _ => format!("{}", val.session),
+            },
+            class: match val.class() {
+                R10 | B210 | C110 => "M",
+                R11 | B211 | C111 => "W",
+                R20 => "U15M",
+                R21 => "U15W",
+                R22 => "U13M",
+                R23 => "U13W",
+                R24 => "U11M",
+                R25 => "U11W",
+                R30 => "U18M",
+                R31 => "U18W",
+                R40 => "U21M",
+                R41 => "U21W",
+                R12 | B212 | C112 => "Ü50M",
+                R13 | B213 | C113 => "Ü50W",
+                B220 | C120 => "U15",
+                B230 | C130 => "U21",
+            }
+            .into(),
             target: val.target_face().to_string(),
             date_of_birth: val.date_of_birth().format("%Y-%m-%d").to_string(),
             price: format!(

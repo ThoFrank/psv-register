@@ -11,6 +11,7 @@ pub struct Archer {
     pub mail: EmailAddress,
     pub comment: String,
     pub club: String,
+    pub session: u8,
     date_of_birth: NaiveDate,
     class: Class,
     target_face: TargetFace,
@@ -21,6 +22,7 @@ pub struct RegisteredArcher {
     pub first_name: String,
     pub last_name: String,
     pub class: Class,
+    pub session: u8,
 }
 
 impl Archer {
@@ -33,11 +35,19 @@ impl Archer {
         target_face: TargetFace,
         comment: String,
         club: String,
+        session: u8,
     ) -> Result<Self, ()> {
-        if !Class::all_classes()
-            .filter(|c| c.in_range(dob))
-            .any(|c| c == cls)
-        {
+        let mut allowed_classes = Class::allowed_classes(crate::bow_type::BowType::Recurve, dob);
+        allowed_classes.append(&mut Class::allowed_classes(
+            crate::bow_type::BowType::Compound,
+            dob,
+        ));
+        allowed_classes.append(&mut Class::allowed_classes(
+            crate::bow_type::BowType::Barebow,
+            dob,
+        ));
+        let allowed_classes: Vec<_> = allowed_classes.into_iter().map(|(cls, _)| cls).collect();
+        if !allowed_classes.contains(&cls) {
             return Err(());
         }
         if !TargetFace::for_cls(cls).contains(&target_face) {
@@ -52,6 +62,7 @@ impl Archer {
             target_face,
             comment,
             club,
+            session,
         })
     }
     pub fn date_of_birth(&self) -> NaiveDate {

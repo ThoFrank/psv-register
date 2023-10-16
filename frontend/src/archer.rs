@@ -1,5 +1,11 @@
+use std::ops::BitXor;
+
 use chrono::NaiveDate;
-use common::{bow_type::BowType, class::Class, target_face::TargetFace};
+use common::{
+    bow_type::BowType,
+    class::{Class, ClassUpgradeStatus},
+    target_face::TargetFace,
+};
 use seed::{prelude::*, *};
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +18,7 @@ pub struct ArcherModel {
     pub date_of_birth: NaiveDate,
     pub bow_type: BowType,
     pub cls: Option<Class>,
+    pub session: u8,
 
     pub possible_target_faces: Vec<TargetFace>,
     pub selected_target_face: TargetFace,
@@ -35,7 +42,7 @@ impl ArcherModel {
         }
     }
     pub fn check_and_update_cls(&mut self, index: usize, orders: &mut impl Orders<Msg>) {
-        let available_classes: Vec<Class> = match self.bow_type {
+        let mut available_classes: Vec<Class> = match self.bow_type {
             BowType::Recurve => Class::recurve_classes(),
             BowType::Compound => Class::compound_classes(),
             BowType::Barebow => Class::barebow_classes(),
@@ -44,6 +51,11 @@ impl ArcherModel {
         .filter(|cls| cls.in_range(self.date_of_birth))
         .copied()
         .collect();
+
+        let available_classes = Class::allowed_classes(self.bow_type, self.date_of_birth)
+            .into_iter()
+            .map(|(cls, _)| cls)
+            .collect::<Vec<_>>();
 
         let new_cls = match (self.cls, available_classes.get(0)) {
             (Some(cls), Some(&new)) => {
@@ -64,19 +76,20 @@ impl ArcherModel {
     }
 
     pub fn ready_for_submission(&self) -> bool {
-        !self.first_name.is_empty() && !self.last_name.is_empty() && self.cls.is_some()
+        !self.first_name.is_empty().bitxor(self.last_name.is_empty()) && self.cls.is_some()
     }
 }
 impl Default for ArcherModel {
     fn default() -> Self {
         let date = NaiveDate::default();
-        let cls = Class::classes_for(date, BowType::Recurve)[0];
+        let cls = Class::allowed_classes(BowType::Recurve, date)[0].0;
         Self {
             first_name: String::new(),
             last_name: String::new(),
             date_of_birth: date,
             bow_type: BowType::Recurve,
             cls: Some(cls),
+            session: 0,
             possible_target_faces: TargetFace::for_cls(cls).to_owned(),
             selected_target_face: TargetFace::for_cls(cls)[0],
         }
@@ -89,12 +102,14 @@ pub enum ArcherMsg {
     DateOfBirthChanged(String),
     BowTypeChange(BowType),
     ClassChanged(Option<Class>),
+    SessionChanged(u8),
     TargetFaceChanged(TargetFace),
 }
 
 pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
     let dob = model.date_of_birth;
     let bow_type = model.bow_type;
+    let allowed_classes = Class::allowed_classes(bow_type, dob);
     p![
         C!("archer"),
         ul!(
@@ -110,7 +125,10 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
         ),
         li!("Vorname:"),
         li!(input!(
-            attrs!(At::Value => model.first_name),
+            attrs!(
+                At::Value => model.first_name,
+                At::Style =>if model.first_name.is_empty() {"border: 1px solid red"} else {""}
+            ),
             input_ev(Ev::Input, move |s| Msg::ArcherMsg(
                 index,
                 ArcherMsg::FirstNameChanged(s)
@@ -118,7 +136,10 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
         )),
         li!("Nachname:"),
         li!(input!(
-            attrs!(At::Value => model.last_name),
+            attrs!(
+                At::Value => model.last_name,
+                At::Style =>if model.last_name.is_empty() {"border: 1px solid red"} else {""}
+            ),
             input_ev(Ev::Input, move |s| Msg::ArcherMsg(
                 index,
                 ArcherMsg::LastNameChanged(s)
@@ -132,6 +153,37 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                 ArcherMsg::DateOfBirthChanged(s)
             ))
         )),
+        li!(br!()),
+        li!("Gruppe:"),
+        li!(
+            input!(
+                attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session1-{}", index)),
+                if model.session == 0 {
+                    Some(attrs!("checked" => AtValue::None))
+                } else {
+                    None
+                },
+                input_ev(Ev::Input, move |_| Msg::ArcherMsg(
+                    index,
+                ArcherMsg::SessionChanged(0),
+                )),
+            ),
+            label!("Vormittags", attrs!(At::For => format!("session1-{}", index))),
+            br!(),
+            input!(
+                attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session2-{}", index)),
+                if model.session == 1 {
+                    Some(attrs!("checked" => AtValue::None))
+                } else {
+                    None
+                },
+                input_ev(Ev::Input, move |_| Msg::ArcherMsg(
+                    index,
+                    ArcherMsg::SessionChanged(1),
+                )),
+            ),
+            label!("Nachmittags", attrs!(At::For => format!("session2-{}", index))),
+        ),
         li!(br!()),
         li!("Bogenart:"),
         li!(
@@ -184,19 +236,13 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
             select!(
                 attrs!(At::Name => "Class",At::AutoComplete => "off", At::Required => AtValue::None),
                 model.cls.map(|cls| attrs!(At::Value => cls.name())),
-                match model.bow_type {
-                    BowType::Recurve => Class::recurve_classes(),
-                    BowType::Compound => Class::compound_classes(),
-                    BowType::Barebow => Class::barebow_classes(),
-                }
-                .iter()
-                .filter(|cls| cls.in_range(model.date_of_birth))
-                .map(|cls| option!(
-                    cls.name(),
+                allowed_classes.clone().into_iter()
+                .map(|(cls, upgrade_status)| option!(
+                    format!("{}{}",cls.name(), if upgrade_status == ClassUpgradeStatus::Upgrade  {" (Höhermeldung)"} else{""}),
                     attrs!(At::Value => cls.name()),
-                    IF!(Some(*cls) == model.cls => attrs!(At::Selected => AtValue::None)),
+                    IF!(Some(cls) == model.cls => attrs!(At::Selected => AtValue::None)),
                     ev(Ev::Input, move |_| {
-                        Msg::ArcherMsg(index, ArcherMsg::ClassChanged(Some(*cls)))
+                        Msg::ArcherMsg(index, ArcherMsg::ClassChanged(Some(cls)))
                     })
                 ))
                 .collect::<Vec<_>>(),
@@ -204,8 +250,9 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     Msg::ArcherMsg(
                         index,
                         ArcherMsg::ClassChanged(Some(
-                            Class::classes_for(dob, bow_type)
+                            allowed_classes
                                 .into_iter()
+                            .map(|(cls, _)| cls)
                                 .find(|cls| cls.name() == cls_name)
                                 .unwrap(),
                         )),
@@ -262,6 +309,10 @@ pub fn update_archer(
         TargetFaceChanged(tf) => {
             seed::log!("Selected target", tf);
             model.selected_target_face = tf;
+        }
+        SessionChanged(session) => {
+            seed::log!("Selected session", session);
+            model.session = session;
         }
     }
 }

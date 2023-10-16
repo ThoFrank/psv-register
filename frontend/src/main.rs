@@ -137,6 +137,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 archers: model
                     .archers
                     .iter()
+                    .filter(|a| !a.first_name.is_empty() && !a.last_name.is_empty())
                     .map(|a| {
                         common::archer::Archer::new(
                             a.first_name.clone(),
@@ -147,6 +148,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                             a.selected_target_face,
                             model.registrator.comment.clone(),
                             model.registrator.club.clone(),
+                            a.session,
                         )
                         .expect("It shouldn't be possible to produce invalid values")
                     })

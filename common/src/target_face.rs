@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, PartialOrd)]
 pub enum TargetFace {
-    M10cm80,
-    M18cm80,
     M18cm60,
     M18cm40,
     M18Spot,
@@ -15,12 +13,10 @@ impl TargetFace {
         use Class::*;
         use TargetFace::*;
         match cls {
-            R24 | R25 => &[M10cm80],
-            R22 | R23 => &[M18cm80],
+            R24 | R25 | R22 | R23 => &[M18cm60],
             R20 | R21 | C120 | B220 => &[M18cm60],
-            R30 | R31 | R14 | R15 => &[M18cm40],
             B210 | B211 | B230 | B212 | B213 => &[M18cm40],
-            C110 | C111 | C112 | C113 | C114 | C115 | C130 | C140 => &[M18Spot],
+            C110 | C111 | C112 | C113 | C130 => &[M18Spot],
             _ => &[M18Spot, M18cm40],
         }
     }
@@ -32,8 +28,6 @@ impl std::fmt::Display for TargetFace {
             f,
             "{}",
             match self {
-                TargetFace::M10cm80 => "10m / 80cm",
-                TargetFace::M18cm80 => "18m / 80cm",
                 TargetFace::M18cm60 => "18m / 60cm",
                 TargetFace::M18cm40 => "18m / 40cm",
                 TargetFace::M18Spot => "18m / Spot",
