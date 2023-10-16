@@ -234,8 +234,8 @@ impl Display for UnknownClassError {
 
 #[test]
 fn test_in_range() {
-    assert!(!Class::R10.in_range(NaiveDate::from_ymd_opt(1973, 12, 31).unwrap()));
-    assert!(Class::R10.in_range(NaiveDate::from_ymd_opt(1974, 1, 1).unwrap()));
-    assert!(Class::R10.in_range(NaiveDate::from_ymd_opt(2002, 12, 31).unwrap()));
-    assert!(!Class::R10.in_range(NaiveDate::from_ymd_opt(2003, 1, 1).unwrap()));
+    assert!(!Class::R10.in_range(NaiveDate::from_ymd_opt(1974, 12, 31).unwrap()));
+    assert!(Class::R10.in_range(NaiveDate::from_ymd_opt(1975, 1, 1).unwrap()));
+    assert!(Class::R10.in_range(NaiveDate::from_ymd_opt(2003, 12, 31).unwrap()));
+    assert!(!Class::R10.in_range(NaiveDate::from_ymd_opt(2004, 1, 1).unwrap()));
 }
