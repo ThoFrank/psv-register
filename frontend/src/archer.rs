@@ -42,16 +42,6 @@ impl ArcherModel {
         }
     }
     pub fn check_and_update_cls(&mut self, index: usize, orders: &mut impl Orders<Msg>) {
-        let mut available_classes: Vec<Class> = match self.bow_type {
-            BowType::Recurve => Class::recurve_classes(),
-            BowType::Compound => Class::compound_classes(),
-            BowType::Barebow => Class::barebow_classes(),
-        }
-        .iter()
-        .filter(|cls| cls.in_range(self.date_of_birth))
-        .copied()
-        .collect();
-
         let available_classes = Class::allowed_classes(self.bow_type, self.date_of_birth)
             .into_iter()
             .map(|(cls, _)| cls)

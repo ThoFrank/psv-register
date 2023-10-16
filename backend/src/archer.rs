@@ -202,8 +202,8 @@ impl From<&common::archer::Archer> for EmailArcher {
                 R31 => "U18W",
                 R40 => "U21M",
                 R41 => "U21W",
-                R12 | B212 | C112 => "Ü50M",
-                R13 | B213 | C113 => "Ü50W",
+                R12 | C112 => "Ü49M",
+                R13 | C113 => "Ü49W",
                 B220 | C120 => "U15",
                 B230 | C130 => "U21",
             }

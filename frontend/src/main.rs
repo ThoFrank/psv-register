@@ -6,7 +6,6 @@ use email_address::EmailAddress;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
 
-use chrono::prelude::*;
 use seed::{prelude::*, *};
 
 #[derive(Serialize, Deserialize)]

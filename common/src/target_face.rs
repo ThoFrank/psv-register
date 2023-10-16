@@ -15,7 +15,7 @@ impl TargetFace {
         match cls {
             R24 | R25 | R22 | R23 => &[M18cm60],
             R20 | R21 | C120 | B220 => &[M18cm60],
-            B210 | B211 | B230 | B212 | B213 => &[M18cm40],
+            B210 | B211 | B230 => &[M18cm40],
             C110 | C111 | C112 | C113 | C130 => &[M18Spot],
             _ => &[M18Spot, M18cm40],
         }

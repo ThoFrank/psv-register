@@ -33,8 +33,6 @@ pub enum Class {
     B211,
     B220,
     B230,
-    B212,
-    B213,
     C110,
     C111,
     C120,
@@ -64,8 +62,6 @@ impl Class {
             Class::B211 => "Blank Damen",
             Class::B220 => "Blank Schüler m/w",
             Class::B230 => "Blank Jugend/Junioren m/w",
-            Class::B212 => "Blank Master m",
-            Class::B213 => "Blank Master w",
             Class::C110 => "Compound Herren",
             Class::C111 => "Compound Damen",
             Class::C120 => "Compound Schüler m/w",
@@ -99,14 +95,7 @@ impl Class {
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
-        &[
-            Self::B210,
-            Self::B211,
-            Self::B220,
-            Self::B230,
-            Self::B212,
-            Self::B213,
-        ]
+        &[Self::B210, Self::B211, Self::B220, Self::B230]
     }
     pub fn compound_classes() -> &'static [Self] {
         &[
@@ -142,12 +131,10 @@ impl Class {
             Class::C112 => (50, 120),
             Class::C113 => (50, 120),
 
-            Class::B210 => (21, 49),
-            Class::B211 => (21, 49),
+            Class::B210 => (21, 120),
+            Class::B211 => (21, 120),
             Class::B220 => (1, 14),
             Class::B230 => (15, 20),
-            Class::B212 => (50, 120),
-            Class::B213 => (50, 120),
         };
 
         let date_range = (*SEASON_START - Months::new(year_range.1 * 12))
@@ -192,8 +179,6 @@ impl Class {
             R41 | R13 => &[R11],
 
             B230 => &[B210, B211],
-            B212 => &[B210],
-            B213 => &[B211],
 
             C120 => &[C110, C111],
             C112 => &[C110],
