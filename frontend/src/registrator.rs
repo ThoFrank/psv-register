@@ -14,7 +14,7 @@ pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
             ),
             input_ev(Ev::Input, Msg::NameChanged)
         )),
-        li!("Versinsname:"),
+        li!("Vereinsname:"),
         li!(input!(
             attrs!(
                 At::Value => model.club

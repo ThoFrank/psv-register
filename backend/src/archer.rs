@@ -173,6 +173,7 @@ struct EmailArcher {
     last_name: String,
     session: String,
     class: String,
+    division: String,
     target: String,
     date_of_birth: String,
     price: String,
@@ -206,6 +207,15 @@ impl From<&common::archer::Archer> for EmailArcher {
                 R13 | C113 => "Ü49W",
                 B220 | C120 => "U15",
                 B230 | C130 => "U21",
+            }
+            .into(),
+            division: match val.class() {
+                R10 | R11 | R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | R40 | R41 | R12
+                | R13 => "Recurve",
+
+                B210 | B211 | B220 | B230 => "Blank",
+
+                C110 | C111 | C120 | C130 | C112 | C113 => "Compound",
             }
             .into(),
             target: val.target_face().to_string(),
