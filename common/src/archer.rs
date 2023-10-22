@@ -21,7 +21,8 @@ pub struct Archer {
 pub struct RegisteredArcher {
     pub first_name: String,
     pub last_name: String,
-    pub class: Class,
+    pub class: String,
+    pub divison: String,
     pub session: u8,
 }
 

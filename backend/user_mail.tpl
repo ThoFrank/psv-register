@@ -26,4 +26,5 @@ Verwendungszweck: Indoor24 - {{club}}
 Weitere Informationen auf https://bogen-psv.de/indoor.html
 
 Viele Grüße und Alle ins Gold
-Sportleitung der Bogenabteilung des PSV München
+Tobias Edlböck
+PSV München
