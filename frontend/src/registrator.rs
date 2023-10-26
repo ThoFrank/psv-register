@@ -14,14 +14,6 @@ pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
             ),
             input_ev(Ev::Input, Msg::NameChanged)
         )),
-        li!("Vereinsname:"),
-        li!(input!(
-            attrs!(
-                At::Value => model.club
-                At::Style =>if model.club.is_empty() {"border: 1px solid red"} else {""}
-            ),
-            input_ev(Ev::Input, Msg::ClubChanged)
-        )),
         li!("Mail-Adresse:"),
         li!(input!(
             attrs!(

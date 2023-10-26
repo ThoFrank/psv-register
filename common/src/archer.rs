@@ -10,8 +10,6 @@ pub struct Archer {
     pub last_name: String,
     pub mail: EmailAddress,
     pub comment: String,
-    pub club: String,
-    pub session: u8,
     date_of_birth: NaiveDate,
     class: Class,
     target_face: TargetFace,
@@ -23,7 +21,6 @@ pub struct RegisteredArcher {
     pub last_name: String,
     pub class: String,
     pub divison: String,
-    pub session: u8,
 }
 
 impl Archer {
@@ -35,8 +32,6 @@ impl Archer {
         cls: Class,
         target_face: TargetFace,
         comment: String,
-        club: String,
-        session: u8,
     ) -> Result<Self, ()> {
         let mut allowed_classes = Class::allowed_classes(crate::bow_type::BowType::Recurve, dob);
         allowed_classes.append(&mut Class::allowed_classes(
@@ -62,8 +57,6 @@ impl Archer {
             class: cls,
             target_face,
             comment,
-            club,
-            session,
         })
     }
     pub fn date_of_birth(&self) -> NaiveDate {

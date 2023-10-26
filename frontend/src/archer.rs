@@ -18,7 +18,6 @@ pub struct ArcherModel {
     pub date_of_birth: NaiveDate,
     pub bow_type: BowType,
     pub cls: Option<Class>,
-    pub session: u8,
 
     pub possible_target_faces: Vec<TargetFace>,
     pub selected_target_face: TargetFace,
@@ -79,7 +78,6 @@ impl Default for ArcherModel {
             date_of_birth: date,
             bow_type: BowType::Recurve,
             cls: Some(cls),
-            session: 0,
             possible_target_faces: TargetFace::for_cls(cls).to_owned(),
             selected_target_face: TargetFace::for_cls(cls)[0],
         }
@@ -92,7 +90,6 @@ pub enum ArcherMsg {
     DateOfBirthChanged(String),
     BowTypeChange(BowType),
     ClassChanged(Option<Class>),
-    SessionChanged(u8),
     TargetFaceChanged(TargetFace),
 }
 
@@ -143,37 +140,6 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                 ArcherMsg::DateOfBirthChanged(s)
             ))
         )),
-        li!(br!()),
-        li!("Gruppe:"),
-        li!(
-            input!(
-                attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session1-{}", index)),
-                if model.session == 0 {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, move |_| Msg::ArcherMsg(
-                    index,
-                ArcherMsg::SessionChanged(0),
-                )),
-            ),
-            label!("Vormittags", attrs!(At::For => format!("session1-{}", index))),
-            br!(),
-            input!(
-                attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session2-{}", index)),
-                if model.session == 1 {
-                    Some(attrs!("checked" => AtValue::None))
-                } else {
-                    None
-                },
-                input_ev(Ev::Input, move |_| Msg::ArcherMsg(
-                    index,
-                    ArcherMsg::SessionChanged(1),
-                )),
-            ),
-            label!("Nachmittags", attrs!(At::For => format!("session2-{}", index))),
-        ),
         li!(br!()),
         li!("Bogenart:"),
         li!(
@@ -299,10 +265,6 @@ pub fn update_archer(
         TargetFaceChanged(tf) => {
             seed::log!("Selected target", tf);
             model.selected_target_face = tf;
-        }
-        SessionChanged(session) => {
-            seed::log!("Selected session", session);
-            model.session = session;
         }
     }
 }

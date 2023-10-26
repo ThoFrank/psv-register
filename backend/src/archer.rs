@@ -14,14 +14,11 @@ pub async fn create_archers(
     Json(payload): Json<CreateArchersPayload>,
 ) -> Result<impl IntoResponse> {
     // println!("Received {} {}", payload.first_name, payload.last_name);
-    let total_price: u32 = payload.archers.iter().map(|a| a.class().price()).sum();
     let mail_data = EmailData {
         comment: payload.comment.clone(),
-        club: payload.club.clone(),
         mail_address: payload.mail.to_string(),
         name: payload.name.clone(),
         archers: payload.archers.iter().map(|a| a.into()).collect(),
-        total_price: format!("{},{:02}€", total_price / 100, total_price % 100),
     };
 
     let archers = payload.archers.clone();
@@ -48,7 +45,6 @@ fn save_archer(archer: Archer) -> Result<()> {
         use Class::*;
         let inserted_bib: i32 = diesel::insert_into(schema::archers::table)
             .values(crate::models::InsertableArcher {
-                session: archer.session as i32 + 1,
                 division: match archer.class() {
                     c if Class::recurve_classes().contains(&c) => "R".to_string(),
                     c if Class::barebow_classes().contains(&c) => "B".to_string(),
@@ -68,10 +64,13 @@ fn save_archer(archer: Archer) -> Result<()> {
                     R31 => "U18W",
                     R40 => "U21M",
                     R41 => "U21W",
-                    R12 | C112 => "Ü49M",
+                    R12 | B212 | C112 => "Ü49M",
                     R13 | C113 => "Ü49W",
+                    R14 | C114 => "Ü65M",
+                    R15 => "Ü65W",
                     B220 | C120 => "U15",
-                    B230 | C130 => "U21",
+                    C130 => "U18",
+                    B230 | C140 => "U21",
                 }
                 .into(),
                 target: format!("{:?}", archer.target_face()),
@@ -83,8 +82,8 @@ fn save_archer(archer: Archer) -> Result<()> {
                 last_name: archer.last_name.clone(),
                 first_name: archer.first_name.clone(),
                 gender: None,
-                country_code: "TODO".to_string(),
-                country_name: archer.club.clone(),
+                country_code: "PSV".to_string(),
+                country_name: "PSV München".to_string(),
                 date_of_birth: archer.date_of_birth().format("%Y-%m-%d").to_string(),
                 ..Default::default()
             })
@@ -126,10 +125,6 @@ async fn send_registration_mail(email_data: EmailData) -> Result<()> {
                 })
                 .unwrap(),
         ))
-        .reply_to(Mailbox::new(
-            Some("Tobias Edlböck".to_string()),
-            "indoor@bogen-psv.de".parse().unwrap(),
-        ))
         .to(Mailbox::new(
             Some(email_data.name.clone()),
             email_data.mail_address.parse().unwrap(),
@@ -137,10 +132,6 @@ async fn send_registration_mail(email_data: EmailData) -> Result<()> {
         .bcc(Mailbox::new(
             Some("Thomas Frank".to_string()),
             "sport@bogen-psv.de".parse().unwrap(),
-        ))
-        .bcc(Mailbox::new(
-            Some("Tobias Edlböck".to_string()),
-            "indoor@bogen-psv.de".parse().unwrap(),
         ))
         .header(lettre::message::header::ContentType::TEXT_PLAIN)
         .subject(&CONFIG.read().mail_message.subject)
@@ -172,7 +163,6 @@ impl From<crate::models::Archer> for RegisteredArcher {
             last_name: val.last_name,
             class: val.class,
             divison: val.division,
-            session: val.session as u8,
         }
     }
 }
@@ -180,23 +170,19 @@ impl From<crate::models::Archer> for RegisteredArcher {
 #[derive(Debug, serde::Serialize)]
 struct EmailData {
     comment: String,
-    club: String,
     mail_address: String,
     name: String,
     archers: Vec<EmailArcher>,
-    total_price: String,
 }
 
 #[derive(Debug, serde::Serialize)]
 struct EmailArcher {
     first_name: String,
     last_name: String,
-    session: String,
     class: String,
     division: String,
     target: String,
     date_of_birth: String,
-    price: String,
 }
 
 impl From<&common::archer::Archer> for EmailArcher {
@@ -205,28 +191,18 @@ impl From<&common::archer::Archer> for EmailArcher {
         EmailArcher {
             first_name: val.first_name.clone(),
             last_name: val.last_name.clone(),
-            session: match val.session {
-                0 => "Vormittag".into(),
-                1 => "Nachmittag".into(),
-                _ => format!("{}", val.session),
-            },
             class: val.class().name().into(),
             division: match val.class() {
                 R10 | R11 | R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | R40 | R41 | R12
-                | R13 => "Recurve",
+                | R13 | R14 | R15 => "Recurve",
 
-                B210 | B211 | B220 | B230 => "Blank",
+                B210 | B211 | B220 | B230 | B212 => "Blank",
 
-                C110 | C111 | C120 | C130 | C112 | C113 => "Compound",
+                C110 | C111 | C120 | C130 | C140 | C112 | C113 | C114 => "Compound",
             }
             .into(),
             target: val.target_face().to_string(),
             date_of_birth: val.date_of_birth().format("%Y-%m-%d").to_string(),
-            price: format!(
-                "{},{:02}€",
-                val.class().price() / 100,
-                val.class().price() % 100
-            ),
         }
     }
 }

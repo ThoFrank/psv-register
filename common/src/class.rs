@@ -29,16 +29,21 @@ pub enum Class {
     R41,
     R12,
     R13,
+    R14,
+    R15,
     B210,
     B211,
+    B212,
     B220,
     B230,
     C110,
     C111,
     C120,
     C130,
+    C140,
     C112,
     C113,
+    C114,
 }
 
 impl Class {
@@ -58,16 +63,23 @@ impl Class {
             Class::R41 => "Recurve Junioren w",
             Class::R12 => "Recurve Master m",
             Class::R13 => "Recurve Master w",
+            Class::R14 => "Recurve Senioren m",
+            Class::R15 => "Recurve Senioren w",
+
             Class::B210 => "Blank Herren",
             Class::B211 => "Blank Damen",
             Class::B220 => "Blank Schüler m/w",
-            Class::B230 => "Blank Jugend/Junioren m/w",
+            Class::B230 => "Blank Jugend m/w",
+            Class::B212 => "Blank Master m",
+
             Class::C110 => "Compound Herren",
             Class::C111 => "Compound Damen",
             Class::C120 => "Compound Schüler m/w",
-            Class::C130 => "Compound Jugend/Junioren m/w",
+            Class::C130 => "Compound Jugend m/w",
+            Class::C140 => "Compound Junioren m/w",
             Class::C112 => "Compound Master m",
             Class::C113 => "Compound Master w",
+            Class::C114 => "Compound Senioren m",
         }
     }
     pub fn comment(&self) -> &'static str {
@@ -92,10 +104,12 @@ impl Class {
             Self::R41,
             Self::R12,
             Self::R13,
+            Self::R14,
+            Self::R15,
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
-        &[Self::B210, Self::B211, Self::B220, Self::B230]
+        &[Self::B210, Self::B211, Self::B220, Self::B230, Self::B212]
     }
     pub fn compound_classes() -> &'static [Self] {
         &[
@@ -103,8 +117,10 @@ impl Class {
             Self::C111,
             Self::C120,
             Self::C130,
+            Self::C140,
             Self::C112,
             Self::C113,
+            Self::C114,
         ]
     }
     pub fn in_range(&self, dob: NaiveDate) -> bool {
@@ -121,34 +137,30 @@ impl Class {
             Class::R31 => (15, 17),
             Class::R40 => (18, 20),
             Class::R41 => (18, 20),
-            Class::R12 => (50, 120),
-            Class::R13 => (50, 120),
+            Class::R12 => (50, 65),
+            Class::R13 => (50, 65),
+            Class::R14 => (66, 120),
+            Class::R15 => (66, 120),
 
             Class::C110 => (21, 49),
             Class::C111 => (21, 49),
             Class::C120 => (1, 14),
-            Class::C130 => (15, 20),
-            Class::C112 => (50, 120),
+            Class::C130 => (15, 17),
+            Class::C140 => (18, 20),
+            Class::C112 => (50, 65),
             Class::C113 => (50, 120),
+            Class::C114 => (66, 120),
 
-            Class::B210 => (21, 120),
+            Class::B210 => (21, 49),
             Class::B211 => (21, 120),
             Class::B220 => (1, 14),
             Class::B230 => (15, 20),
+            Class::B212 => (50, 120),
         };
 
         let date_range = (*SEASON_START - Months::new(year_range.1 * 12))
             ..(*SEASON_START - Months::new((year_range.0 - 1) * 12));
         date_range.contains(&dob)
-    }
-
-    // Price of starter in class in euro cent
-    pub fn price(&self) -> u32 {
-        use Class::*;
-        match self {
-            R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | B220 | B230 | C120 | C130 => 1200,
-            _ => 1800,
-        }
     }
 
     pub fn allowed_classes(bow_type: BowType, dob: NaiveDate) -> Vec<(Class, ClassUpgradeStatus)> {
@@ -177,12 +189,15 @@ impl Class {
             // Junioren + Master => Herren/Damen
             R40 | R12 => &[R10],
             R41 | R13 => &[R11],
+            R14 => &[R12, R10],
+            R15 => &[R13, R11],
 
-            B230 => &[B210, B211],
+            B212 => &[B210],
 
-            C120 => &[C110, C111],
+            C140 => &[C110, C111],
             C112 => &[C110],
             C113 => &[C111],
+            C114 => &[C112, C110],
 
             _ => &[],
         }

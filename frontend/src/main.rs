@@ -21,7 +21,6 @@ pub struct Registrator {
     name: String,
     mail: InsertedMail,
     comment: String,
-    club: String,
 }
 
 thread_local! {
@@ -35,7 +34,6 @@ impl Model {
                 name: String::new(),
                 mail: InsertedMail::Invalid(String::new()),
                 comment: String::new(),
-                club: String::new(),
             },
             archers: vec![ArcherModel::default()],
             submitting: false,
@@ -104,7 +102,6 @@ pub enum Msg {
     RemoveArcher(usize),
 
     NameChanged(String),
-    ClubChanged(String),
     MailChanged(String),
     CommentChanged(String),
 
@@ -132,7 +129,6 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 name: model.registrator.name.clone(),
                 mail: mail.clone(),
                 comment: model.registrator.comment.clone(),
-                club: model.registrator.club.clone(),
                 archers: model
                     .archers
                     .iter()
@@ -146,8 +142,6 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                             a.cls.expect("Submission only possible if class is set"),
                             a.selected_target_face,
                             model.registrator.comment.clone(),
-                            model.registrator.club.clone(),
-                            a.session,
                         )
                         .expect("It shouldn't be possible to produce invalid values")
                     })
@@ -184,9 +178,6 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::NameChanged(name) => {
             model.registrator.name = name;
         }
-        Msg::ClubChanged(club) => {
-            model.registrator.club = club;
-        }
     }
 
     if let Some(session_storage) = window().session_storage().ok().flatten() {
@@ -215,7 +206,7 @@ fn view(model: &Model) -> Node<Msg> {
         li!(br!()),
         li!(button!(
             "Anmeldung Einreichen",
-            IF!(model.archers.is_empty() || model.archers.iter().any(|a| !a.ready_for_submission()) || model.registrator.club.is_empty() || !model.registrator.mail.is_valid() || model.submitting => attrs!(At::Disabled => AtValue::None)),
+            IF!(model.archers.is_empty() || model.archers.iter().any(|a| !a.ready_for_submission()) || !model.registrator.mail.is_valid() || model.submitting => attrs!(At::Disabled => AtValue::None)),
             input_ev(Ev::Click, |_| Msg::Submit)
         ))
     ]

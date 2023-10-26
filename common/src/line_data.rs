@@ -5,6 +5,5 @@ pub struct CreateArchersPayload {
     pub name: String,
     pub mail: EmailAddress,
     pub comment: String,
-    pub club: String,
     pub archers: Vec<crate::archer::Archer>,
 }
