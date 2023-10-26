@@ -71,6 +71,7 @@ fn save_archer(archer: Archer) -> Result<()> {
                     B220 | C120 => "U15",
                     C130 => "U18",
                     B230 | C140 => "U21",
+                    O => "O",
                 }
                 .into(),
                 target: format!("{:?}", archer.target_face()),
@@ -194,7 +195,7 @@ impl From<&common::archer::Archer> for EmailArcher {
             class: val.class().name().into(),
             division: match val.class() {
                 R10 | R11 | R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | R40 | R41 | R12
-                | R13 | R14 | R15 => "Recurve",
+                | R13 | R14 | R15 | O => "Recurve",
 
                 B210 | B211 | B220 | B230 | B212 => "Blank",
 

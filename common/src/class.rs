@@ -44,6 +44,7 @@ pub enum Class {
     C112,
     C113,
     C114,
+    O,
 }
 
 impl Class {
@@ -80,6 +81,8 @@ impl Class {
             Class::C112 => "Compound Master m",
             Class::C113 => "Compound Master w",
             Class::C114 => "Compound Senioren m",
+
+            Class::O => "Offene Klasse",
         }
     }
     pub fn comment(&self) -> &'static str {
@@ -106,6 +109,7 @@ impl Class {
             Self::R13,
             Self::R14,
             Self::R15,
+            Self::O,
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
@@ -156,6 +160,8 @@ impl Class {
             Class::B220 => (1, 14),
             Class::B230 => (15, 20),
             Class::B212 => (50, 120),
+
+            Class::O => (1, 120),
         };
 
         let date_range = (*SEASON_START - Months::new(year_range.1 * 12))
