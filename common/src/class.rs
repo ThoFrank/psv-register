@@ -1,18 +1,28 @@
 use std::{fmt::Display, str::FromStr};
 
-use crate::bow_type::BowType;
+use crate::{bow_type::BowType, locale::Locale};
 use chrono::{Months, NaiveDate};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use strum::IntoEnumIterator;
+use strum::{Display, IntoEnumIterator};
 
 lazy_static! {
     pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
 }
 
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, strum::EnumIter, PartialOrd, Hash,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    strum::EnumIter,
+    PartialOrd,
+    Hash,
+    Display,
 )]
 pub enum Class {
     R10,
@@ -42,32 +52,60 @@ pub enum Class {
 }
 
 impl Class {
-    pub fn name(&self) -> &'static str {
-        match self {
-            Class::R10 => "Recurve Herren",
-            Class::R11 => "Recurve Damen",
-            Class::R20 => "Recurve Schüler A m",
-            Class::R21 => "Recurve Schüler A w",
-            Class::R22 => "Recurve Schüler B m",
-            Class::R23 => "Recurve Schüler B w",
-            Class::R24 => "Recurve Schüler C m",
-            Class::R25 => "Recurve Schüler C w",
-            Class::R30 => "Recurve Jugend m",
-            Class::R31 => "Recurve Jugend w",
-            Class::R40 => "Recurve Junioren m",
-            Class::R41 => "Recurve Junioren w",
-            Class::R12 => "Recurve Master m",
-            Class::R13 => "Recurve Master w",
-            Class::B210 => "Blank Herren",
-            Class::B211 => "Blank Damen",
-            Class::B220 => "Blank Schüler m/w",
-            Class::B230 => "Blank Jugend/Junioren m/w",
-            Class::C110 => "Compound Herren",
-            Class::C111 => "Compound Damen",
-            Class::C120 => "Compound Schüler m/w",
-            Class::C130 => "Compound Jugend/Junioren m/w",
-            Class::C112 => "Compound Master m",
-            Class::C113 => "Compound Master w",
+    pub fn name(&self, locale: Locale) -> &'static str {
+        match locale {
+            Locale::En => match self {
+                Class::R10 => "Recurve Men",
+                Class::R11 => "Recurve Women",
+                Class::R20 => "Recurve 13-14 male",
+                Class::R21 => "Recurve 13-14 female",
+                Class::R22 => "Recurve 11-12 male",
+                Class::R23 => "Recurve 11-12 female",
+                Class::R24 => "Recurve 1-10 male",
+                Class::R25 => "Recurve 1-10 female",
+                Class::R30 => "Recurve 15-17 male",
+                Class::R31 => "Recurve 15-17 female",
+                Class::R40 => "Recurve 18-21 male",
+                Class::R41 => "Recurve 18-21 female",
+                Class::R12 => "Recurve 50+ male",
+                Class::R13 => "Recurve 50+ female",
+                Class::B210 => "Barebow Men",
+                Class::B211 => "Barebow Women",
+                Class::B220 => "Barebow 1-14 male/female",
+                Class::B230 => "Barebow 15-20 male/female",
+                Class::C110 => "Compound Men",
+                Class::C111 => "Compound Women",
+                Class::C120 => "Compound 1-14 male/female",
+                Class::C130 => "Compound 15-20 male/female",
+                Class::C112 => "Compound 50+ male",
+                Class::C113 => "Compound 50+ female",
+            },
+            Locale::De => match self {
+                Class::R10 => "Recurve Herren",
+                Class::R11 => "Recurve Damen",
+                Class::R20 => "Recurve Schüler A m",
+                Class::R21 => "Recurve Schüler A w",
+                Class::R22 => "Recurve Schüler B m",
+                Class::R23 => "Recurve Schüler B w",
+                Class::R24 => "Recurve Schüler C m",
+                Class::R25 => "Recurve Schüler C w",
+                Class::R30 => "Recurve Jugend m",
+                Class::R31 => "Recurve Jugend w",
+                Class::R40 => "Recurve Junioren m",
+                Class::R41 => "Recurve Junioren w",
+                Class::R12 => "Recurve Master m",
+                Class::R13 => "Recurve Master w",
+                Class::B210 => "Blank Herren",
+                Class::B211 => "Blank Damen",
+                Class::B220 => "Blank Schüler m/w",
+                Class::B230 => "Blank Jugend/Junioren m/w",
+                Class::C110 => "Compound Herren",
+                Class::C111 => "Compound Damen",
+                Class::C120 => "Compound Schüler m/w",
+                Class::C130 => "Compound Jugend/Junioren m/w",
+                Class::C112 => "Compound Master m",
+                Class::C113 => "Compound Master w",
+            },
         }
     }
     pub fn comment(&self) -> &'static str {

@@ -77,10 +77,10 @@ async fn main() {
         // handlebars.set_strict_mode(true);
         handlebars.set_dev_mode(cfg!(debug_assertions));
         handlebars
-            .register_template_file(
-                "user_mail",
-                std::path::PathBuf::from(args.mail_template_file),
-            )
+            .register_template_string("user_mail_en", include_str!("../user_mail_en.tpl"))
+            .unwrap();
+        handlebars
+            .register_template_string("user_mail", include_str!("../user_mail.tpl"))
             .unwrap();
     }
 

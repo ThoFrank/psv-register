@@ -20,7 +20,11 @@ pub async fn create_archers(
         club: payload.club.clone(),
         mail_address: payload.mail.to_string(),
         name: payload.name.clone(),
-        archers: payload.archers.iter().map(|a| a.into()).collect(),
+        archers: payload
+            .archers
+            .iter()
+            .map(|a| EmailArcher::from(a, payload.locale))
+            .collect(),
         total_price: format!("{},{:02}€", total_price / 100, total_price % 100),
     };
 
@@ -31,7 +35,7 @@ pub async fn create_archers(
             .map(|archer| save_archer(archer))
             .collect::<Result<Vec<()>>>()
     });
-    let (save, mail) = tokio::join!(save_task, send_registration_mail(mail_data));
+    let (save, mail) = tokio::join!(save_task, send_registration_mail(mail_data, payload.locale));
     save.unwrap()?;
     mail?;
 
@@ -103,7 +107,10 @@ fn save_archer(archer: Archer) -> Result<()> {
     })
 }
 
-async fn send_registration_mail(email_data: EmailData) -> Result<()> {
+async fn send_registration_mail(
+    email_data: EmailData,
+    locale: common::locale::Locale,
+) -> Result<()> {
     let credentials = Credentials::new(
         CONFIG.read().mail_server.smtp_username.clone(),
         CONFIG.read().mail_server.smtp_password.clone(),
@@ -144,7 +151,18 @@ async fn send_registration_mail(email_data: EmailData) -> Result<()> {
         ))
         .header(lettre::message::header::ContentType::TEXT_PLAIN)
         .subject(&CONFIG.read().mail_message.subject)
-        .body(HANDLEBARS.read().render("user_mail", &email_data).unwrap())
+        .body(
+            HANDLEBARS
+                .read()
+                .render(
+                    match locale {
+                        common::locale::Locale::En => "user_mail_en",
+                        common::locale::Locale::De => "user_mail",
+                    },
+                    &email_data,
+                )
+                .unwrap(),
+        )
         .unwrap();
 
     let mailer: AsyncSmtpTransport<Tokio1Executor> =
@@ -200,23 +218,34 @@ struct EmailArcher {
     price: String,
 }
 
-impl From<&common::archer::Archer> for EmailArcher {
-    fn from(val: &common::archer::Archer) -> Self {
+impl EmailArcher {
+    fn from(val: &common::archer::Archer, locale: common::locale::Locale) -> Self {
         use Class::*;
         EmailArcher {
             first_name: val.first_name.clone(),
             last_name: val.last_name.clone(),
             session: match val.session {
-                0 => "Vormittag".into(),
-                1 => "Nachmittag".into(),
+                0 => match locale {
+                    common::locale::Locale::En => "Morning",
+                    common::locale::Locale::De => "Vormittag",
+                }
+                .into(),
+                1 => match locale {
+                    common::locale::Locale::En => "Afternoon",
+                    common::locale::Locale::De => "Nachmittag",
+                }
+                .into(),
                 _ => format!("{}", val.session),
             },
-            class: val.class().name().into(),
+            class: val.class().name(locale).into(),
             division: match val.class() {
                 R10 | R11 | R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | R40 | R41 | R12
                 | R13 => "Recurve",
 
-                B210 | B211 | B220 | B230 => "Blank",
+                B210 | B211 | B220 | B230 => match locale {
+                    common::locale::Locale::En => "Barebow",
+                    common::locale::Locale::De => "Blank",
+                },
 
                 C110 | C111 | C120 | C130 | C112 | C113 => "Compound",
             }

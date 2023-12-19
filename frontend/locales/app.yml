@@ -1,0 +1,85 @@
+_version: 2
+Add archer:
+  en: "Add archer"
+  de: "Schützen Hinzufügen"
+Submit:
+  en: "Submit"
+  de: "Anmeldung Einreichen"
+Archer:
+  en: "Archer"
+  de: "Schütze"
+Delete:
+  en: "Delete"
+  de: "Löschen"
+First name:
+  en: "First name:"
+  de: "Vorname:"
+Last name:
+  en: "Last name:"
+  de: "Nachname:"
+Date of birth:
+  en: "Date of birth:"
+  de: "Geburtsdatum:"
+Session:
+  en: "Session:"
+  de: "Gruppe:"
+Morning:
+  en: "Morning"
+  de: "Vormittags"
+Afternoon:
+  en: "Afternoon"
+  de: "Nachmittags"
+Bow type:
+  en: "Bow type:"
+  de: "Bogenart:"
+Recurve:
+  en: "Recurve"
+  de: "Recurve"
+Barebow:
+  en: "Barebow"
+  de: "Blank"
+Compound:
+  en: "Compound"
+  de: "Compound"
+Class:
+  en: "Class:"
+  de: "Klasse:"
+Target:
+  en: "Target:"
+  de: "Scheibe:"
+Registrator:
+  en: "Registrator:"
+  de: "Melder:"
+Name of Registrator:
+  en: "Name of Registrator:"
+  de: "Name des Melders:"
+Name of club:
+  en: "Name of club:"
+  de: "Vereinsname:"
+Mail address:
+  en: "Mail address:"
+  de: "Mail-Adresse:"
+Comment:
+  en: "Comment:"
+  de: "Kommentar:"
+Upgrade from regular class:
+  en: " (Upgrade from regular class)"
+  de: " (Höhermeldung)"
+Registration successful message:
+  en: "Registration successful. Confirmation mail was sent."
+  de: "Anmeldung erfolgreich. Bestätigungsmail wurde abgeschickt."
+Error:
+  en: "Error"
+  de: "Fehler"
+Headline:
+  en: "Registration PSV Indoor Tournament"
+  de: "Anmeldung PSV Indoor Tournament"
+Headline date:
+  en: "on March 3rd 2024"
+  de: "am 03.03.2024"
+privacy policy:
+  en: privacy policy
+  de: Datenschutz
+legal notice:
+  en: legal notice
+  de: Impressum

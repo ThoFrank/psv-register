@@ -2,11 +2,15 @@ mod archer;
 mod registrator;
 
 use archer::ArcherModel;
+use common::locale::Locale;
 use email_address::EmailAddress;
+use rust_i18n::{i18n, t};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
 
 use seed::{prelude::*, *};
+
+i18n!();
 
 #[derive(Serialize, Deserialize)]
 struct Model {
@@ -14,6 +18,7 @@ struct Model {
     archers: Vec<ArcherModel>,
 
     submitting: bool,
+    locale: Locale,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -39,6 +44,7 @@ impl Model {
             },
             archers: vec![ArcherModel::default()],
             submitting: false,
+            locale: Locale::De,
         }
     }
 }
@@ -70,6 +76,7 @@ impl Display for InsertedMail {
 }
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
+    rust_i18n::set_locale("de");
     BASE_URL.with(|base_url| {
         *base_url.borrow_mut() = url.to_base_url();
     });
@@ -78,7 +85,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         seed::log!("Couldn't load session storage");
         return Model::new();
     };
-    if let Some(ser_model) = session_storage.get_item("model").unwrap() {
+    let model = if let Some(ser_model) = session_storage.get_item("model").unwrap() {
         match serde_json::from_str::<Model>(&ser_model) {
             Ok(mut model) => {
                 model.submitting = false;
@@ -95,7 +102,12 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         }
     } else {
         Model::new()
+    };
+    match model.locale {
+        Locale::En => rust_i18n::set_locale("en"),
+        Locale::De => rust_i18n::set_locale("de"),
     }
+    model
 }
 
 pub enum Msg {
@@ -111,6 +123,8 @@ pub enum Msg {
     Submit,
     RegistrationFailed(String),
     RegistrationOk,
+
+    ToggleLanguage,
 }
 
 fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -152,18 +166,19 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                         .expect("It shouldn't be possible to produce invalid values")
                     })
                     .collect(),
+                locale: model.locale,
             }));
         }
         Msg::RegistrationFailed(err) => {
             seed::window()
-                .alert_with_message(&format!("Fehler! {err:?}"))
+                .alert_with_message(&format!("{}! {err:?}", t!("Error")))
                 .ok();
             seed::error!("Submission failed!", err);
             model.submitting = false;
         }
         Msg::RegistrationOk => {
             seed::window()
-                .alert_with_message("Anmeldung erfolgreich. Bestätigungsmail wurde abgeschickt.")
+                .alert_with_message(&t!("Registration successful message"))
                 .ok();
             seed::log!("Submission ok!");
             *model = Model {
@@ -187,6 +202,16 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ClubChanged(club) => {
             model.registrator.club = club;
         }
+        Msg::ToggleLanguage => {
+            model.locale = match model.locale {
+                Locale::En => Locale::De,
+                Locale::De => Locale::En,
+            };
+            rust_i18n::set_locale(match model.locale {
+                Locale::En => "en",
+                Locale::De => "de",
+            })
+        }
     }
 
     if let Some(session_storage) = window().session_storage().ok().flatten() {
@@ -197,10 +222,24 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 }
 
 fn view(model: &Model) -> Node<Msg> {
+    div![view_headline(), view_body(model), view_footer()]
+}
+
+fn view_body(model: &Model) -> Node<Msg> {
     // let dob = model.date_of_birth;
     // let bow_type = model.bow_type;
     ul![
         C!("list"),
+        li!(
+            button!(
+                attrs!(At::Style => "width: 100%"),
+                match model.locale {
+                    Locale::En => "Ändere auf DE🇩🇪",
+                    Locale::De => "Switch to EN 🇬🇧",
+                }
+            ),
+            input_ev(Ev::Click, |_| Msg::ToggleLanguage)
+        ),
         registrator::view_registrator(&model.registrator),
         hr!(),
         model
@@ -209,12 +248,12 @@ fn view(model: &Model) -> Node<Msg> {
             .enumerate()
             .map(|(index, archer)| { p!(li!(archer::archer_view(archer, index)), hr!()) }),
         li!(button!(
-            "Schützen Hinzufügen",
+            t!("Add archer"),
             input_ev(Ev::Click, |_| Msg::AddArcher)
         )),
         li!(br!()),
         li!(button!(
-            "Anmeldung Einreichen",
+            t!("Submit"),
             IF!(model.archers.is_empty() || model.archers.iter().any(|a| !a.ready_for_submission()) || model.registrator.club.is_empty() || !model.registrator.mail.is_valid() || model.submitting => attrs!(At::Disabled => AtValue::None)),
             input_ev(Ev::Click, |_| Msg::Submit)
         ))
@@ -239,6 +278,24 @@ async fn post_participants(data: common::line_data::CreateArchersPayload) -> Msg
             Msg::RegistrationFailed(text.unwrap_or(format!("{e:?}")))
         }
     }
+}
+
+fn view_headline() -> Vec<Node<Msg>> {
+    vec![h1!(t!("Headline")), h4!(t!("Headline date"))]
+}
+
+fn view_footer() -> Node<Msg> {
+    footer![
+        a!(
+            attrs!(At::Href => "https://bogen-psv.de/datenschutz.html"),
+            t!("privacy policy")
+        ),
+        " - ",
+        a!(
+            attrs!(At::Href => "https://bogen-psv.de/impressum.html"),
+            t!("legal notice")
+        )
+    ]
 }
 
 pub fn main() {

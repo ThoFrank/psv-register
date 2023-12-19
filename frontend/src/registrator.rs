@@ -1,3 +1,4 @@
+use rust_i18n::t;
 use seed::{prelude::*, *};
 
 use crate::Msg;
@@ -5,8 +6,8 @@ use crate::Msg;
 pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
     ul![
         C!("list"),
-        li!(h3!["Melder:"]),
-        li!("Name des Melders:"),
+        li!(h3![t!("Registrator")]),
+        li!(t!("Name of Registrator")),
         li!(input!(
             attrs!(
                 At::Value => model.name,
@@ -14,7 +15,7 @@ pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
             ),
             input_ev(Ev::Input, Msg::NameChanged)
         )),
-        li!("Vereinsname:"),
+        li!(t!("Name of club")),
         li!(input!(
             attrs!(
                 At::Value => model.club
@@ -22,7 +23,7 @@ pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
             ),
             input_ev(Ev::Input, Msg::ClubChanged)
         )),
-        li!("Mail-Adresse:"),
+        li!(t!("Mail address")),
         li!(input!(
             attrs!(
                 At::Value => model.mail,
@@ -31,7 +32,7 @@ pub fn view_registrator(model: &crate::Registrator) -> Node<crate::Msg> {
             ),
             input_ev(Ev::Input, Msg::MailChanged)
         )),
-        li!("Kommentar:"),
+        li!(t!("Comment")),
         li!(textarea!(
             attrs!(At::Value => model.comment),
             input_ev(Ev::Input, Msg::CommentChanged)

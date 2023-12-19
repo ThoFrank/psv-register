@@ -4,8 +4,10 @@ use chrono::NaiveDate;
 use common::{
     bow_type::BowType,
     class::{Class, ClassUpgradeStatus},
+    locale::Locale,
     target_face::TargetFace,
 };
+use rust_i18n::t;
 use seed::{prelude::*, *};
 use serde::{Deserialize, Serialize};
 
@@ -106,14 +108,14 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
             C!("list flex"),
             li!(
                 C!("horizontal"),
-                h3!(format!("Schütze {}:", index + 1))
+                h3!(format!("{} {}:", t!("Archer"), index + 1))
             ),
             li!(
                 C!("horizontal"),
-                button!("Löschen", input_ev(Ev::Click, move |_| Msg::RemoveArcher(index)))
+                button!(t!("Delete"), input_ev(Ev::Click, move |_| Msg::RemoveArcher(index)))
             )
         ),
-        li!("Vorname:"),
+        li!(t!("First name")),
         li!(input!(
             attrs!(
                 At::Value => model.first_name,
@@ -124,7 +126,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                 ArcherMsg::FirstNameChanged(s)
             ))
         )),
-        li!("Nachname:"),
+        li!(t!("Last name")),
         li!(input!(
             attrs!(
                 At::Value => model.last_name,
@@ -135,7 +137,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                 ArcherMsg::LastNameChanged(s)
             ))
         )),
-        li!("Geburtsdatum:"),
+        li!(t!("Date of birth")),
         li!(input!(
             attrs!(At::Value => model.date_of_birth, At::Type => "date" ),
             input_ev(Ev::Input, move |s| Msg::ArcherMsg(
@@ -144,7 +146,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
             ))
         )),
         li!(br!()),
-        li!("Gruppe:"),
+        li!(t!("Session")),
         li!(
             input!(
                 attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session1-{}", index)),
@@ -158,7 +160,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                 ArcherMsg::SessionChanged(0),
                 )),
             ),
-            label!("Vormittags", attrs!(At::For => format!("session1-{}", index))),
+            label!(t!("Morning"), attrs!(At::For => format!("session1-{}", index))),
             br!(),
             input!(
                 attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session2-{}", index)),
@@ -172,10 +174,10 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::SessionChanged(1),
                 )),
             ),
-            label!("Nachmittags", attrs!(At::For => format!("session2-{}", index))),
+            label!(t!("Afternoon"), attrs!(At::For => format!("session2-{}", index))),
         ),
         li!(br!()),
-        li!("Bogenart:"),
+        li!(t!("Bow type")),
         li!(
             input!(
                 attrs!(At::Type => "radio", At::Name => format!("bow_type{}", index), At::Id => format!("recurve{}",index)),
@@ -189,7 +191,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::BowTypeChange(BowType::Recurve)
                 ))
             ),
-            label!("Recurve", attrs!(At::For => format!("recurve{}", index))),
+            label!(t!("Recurve"), attrs!(At::For => format!("recurve{}", index))),
             br!(),
             input!(
                 attrs!(At::Type => "radio", At::Name => format!("bow_type{}", index), At::Id => format!("blank{}", index)),
@@ -203,7 +205,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::BowTypeChange(BowType::Barebow)
                 ))
             ),
-            label!("Blank", attrs!(At::For => format!("blank{}", index))),
+            label!(t!("Barebow"), attrs!(At::For => format!("blank{}", index))),
             br!(),
             input!(
                 attrs!(At::Type => "radio", At::Name => format!("bow_type{}", index), At::Id => format!("compound{}",index), ),
@@ -217,33 +219,33 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::BowTypeChange(BowType::Compound)
                 ))
             ),
-            label!("Compound", attrs!(At::For => format!("compound{}", index)))
+            label!(t!("Compound"), attrs!(At::For => format!("compound{}", index)))
         ),
         li!(br!()),
-        li!("Klasse:"),
+        li!(t!("Class")),
         li!(
             attrs!(At::Name => "cls"),
             select!(
                 attrs!(At::Name => "Class",At::AutoComplete => "off", At::Required => AtValue::None),
-                model.cls.map(|cls| attrs!(At::Value => cls.name())),
+                model.cls.map(|cls| attrs!(At::Value => cls.to_string())),
                 allowed_classes.clone().into_iter()
                 .map(|(cls, upgrade_status)| option!(
-                    format!("{}{}",cls.name(), if upgrade_status == ClassUpgradeStatus::Upgrade  {" (Höhermeldung)"} else{""}),
-                    attrs!(At::Value => cls.name()),
+                    format!("{}{}",cls.name(Locale::from_str(&rust_i18n::locale()).unwrap()), if upgrade_status == ClassUpgradeStatus::Upgrade  {t!("Upgrade from regular class")} else{"".into()}),
+                    attrs!(At::Value => cls.to_string()),
                     IF!(Some(cls) == model.cls => attrs!(At::Selected => AtValue::None)),
                     ev(Ev::Input, move |_| {
                         Msg::ArcherMsg(index, ArcherMsg::ClassChanged(Some(cls)))
                     })
                 ))
                 .collect::<Vec<_>>(),
-                input_ev(Ev::Input, move |cls_name| {
+                input_ev(Ev::Input, move |cls_id| {
                     Msg::ArcherMsg(
                         index,
                         ArcherMsg::ClassChanged(Some(
                             allowed_classes
                                 .into_iter()
                             .map(|(cls, _)| cls)
-                                .find(|cls| cls.name() == cls_name)
+                                .find(|cls| cls.to_string() == cls_id)
                                 .unwrap(),
                         )),
                     )
@@ -251,7 +253,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
             )
         ),
         li!(br!()),
-        li!("Scheibe:"),
+        li!(t!("Target")),
         li!(model.possible_target_faces.iter().map(|&tf| div![
             input!(
                 attrs!(At::Type => "radio", At::Name => format!("target_face{}", index), At::Id => format!("{}-{}", tf, index)),
@@ -292,7 +294,7 @@ pub fn update_archer(
             model.check_and_update_cls(index, orders);
         }
         ClassChanged(cls) => {
-            seed::log!("Selected cls", cls.map(|cls| cls.name()));
+            seed::log!("Selected cls", cls.map(|cls| cls.to_string()));
             model.cls = cls;
             model.update_target_face();
         }

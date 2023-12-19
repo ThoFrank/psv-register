@@ -7,4 +7,5 @@ pub struct CreateArchersPayload {
     pub comment: String,
     pub club: String,
     pub archers: Vec<crate::archer::Archer>,
+    pub locale: crate::locale::Locale,
 }
