@@ -173,6 +173,7 @@ impl From<crate::models::Archer> for RegisteredArcher {
             class: val.class,
             divison: val.division,
             session: val.session as u8,
+            club: val.country_name,
         }
     }
 }

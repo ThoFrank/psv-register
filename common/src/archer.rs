@@ -24,6 +24,7 @@ pub struct RegisteredArcher {
     pub class: String,
     pub divison: String,
     pub session: u8,
+    pub club: String,
 }
 
 impl Archer {
