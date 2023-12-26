@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{class::Class, target_face::TargetFace};
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Archer {
     pub first_name: String,
     pub last_name: String,

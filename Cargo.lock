@@ -396,6 +396,7 @@ dependencies = [
  "lazy_static",
  "rust-i18n",
  "serde",
+ "serde_json",
  "strum",
 ]
 
