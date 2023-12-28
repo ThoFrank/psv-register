@@ -235,6 +235,16 @@ impl EmailArcher {
                     common::locale::Locale::De => "Nachmittag",
                 }
                 .into(),
+                2 => match locale {
+                    common::locale::Locale::En => "waiting list",
+                    common::locale::Locale::De => "Warteliste",
+                }
+                .into(),
+                3 => match locale {
+                    common::locale::Locale::En => "waiting list - afternoon only",
+                    common::locale::Locale::De => "Warteliste - nur Nachmittags",
+                }
+                .into(),
                 _ => format!("{}", val.session),
             },
             class: val.class().name(locale).into(),

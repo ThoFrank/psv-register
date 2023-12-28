@@ -18,6 +18,7 @@ Scheibe: {{this.target}}
 {{/each}}
 
 Wir bitten um eine baldige Überweisung der Startgebühr.
+Falls ihr euch auf die Warteliste angemeldet habt, bitte erst nach Zusage bezahlen.
 Betrag: {{total_price}}
 IBAN: DE97 1001 1001 2620 7749 14
 BIC: NTSBDEB1XXX

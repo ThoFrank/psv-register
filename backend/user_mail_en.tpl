@@ -18,6 +18,7 @@ Target face: {{this.target}}
 {{/each}}
 
 Please transfer the entry fees as soon as possible to our bank account.
+If you registered for the waiting list, please do not pay before your place was confirmed.
 Total sum: {{total_price}}
 IBAN: DE97 1001 1001 2620 7749 14
 BIC: NTSBDEB1XXX

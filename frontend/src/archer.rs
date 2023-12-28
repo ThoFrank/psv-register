@@ -162,19 +162,50 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
             ),
             label!(t!("Morning"), attrs!(At::For => format!("session1-{}", index))),
             br!(),
+
+            // input!(
+            //     attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session2-{}", index)),
+            //     if model.session == 1 {
+            //         Some(attrs!("checked" => AtValue::None))
+            //     } else {
+            //         None
+            //     },
+            //     input_ev(Ev::Input, move |_| Msg::ArcherMsg(
+            //         index,
+            //         ArcherMsg::SessionChanged(1),
+            //     )),
+            // ),
+            // label!(t!("Afternoon"), attrs!(At::For => format!("session2-{}", index))),
+            // br!(),
+
+            // input!(
+            //     attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session3-{}", index)),
+            //     if model.session == 2 {
+            //         Some(attrs!("checked" => AtValue::None))
+            //     } else {
+            //         None
+            //     },
+            //     input_ev(Ev::Input, move |_| Msg::ArcherMsg(
+            //         index,
+            //         ArcherMsg::SessionChanged(2),
+            //     )),
+            // ),
+            // label!(t!("waiting list"), attrs!(At::For => format!("session3-{}", index))),
+            // br!(),
+
             input!(
-                attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session2-{}", index)),
-                if model.session == 1 {
+                attrs!(At::Type => "radio", At::Name => format!("session{}", index), At::Id => format!("session4-{}", index)),
+                if model.session == 3 {
                     Some(attrs!("checked" => AtValue::None))
                 } else {
                     None
                 },
                 input_ev(Ev::Input, move |_| Msg::ArcherMsg(
                     index,
-                    ArcherMsg::SessionChanged(1),
+                    ArcherMsg::SessionChanged(3),
                 )),
             ),
-            label!(t!("Afternoon"), attrs!(At::For => format!("session2-{}", index))),
+            label!(t!("waiting list afternoon only"), attrs!(At::For => format!("session4-{}", index))),
         ),
         li!(br!()),
         li!(t!("Bow type")),
