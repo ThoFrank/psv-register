@@ -190,7 +190,7 @@ pub fn archer_view(model: &ArcherModel, index: usize) -> Node<Msg> {
                     ArcherMsg::SessionChanged(2),
                 )),
             ),
-            label!(t!("waiting list"), attrs!(At::For => format!("session3-{}", index))),
+            label!(t!("waiting list morning only"), attrs!(At::For => format!("session3-{}", index))),
             br!(),
 
             input!(

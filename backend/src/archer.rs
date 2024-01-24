@@ -236,8 +236,8 @@ impl EmailArcher {
                 }
                 .into(),
                 2 => match locale {
-                    common::locale::Locale::En => "waiting list",
-                    common::locale::Locale::De => "Warteliste",
+                    common::locale::Locale::En => "waiting list - morning only",
+                    common::locale::Locale::De => "Warteliste - nur Vormittags",
                 }
                 .into(),
                 3 => match locale {
