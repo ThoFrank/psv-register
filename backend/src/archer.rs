@@ -14,6 +14,13 @@ pub async fn create_archers(
     Json(payload): Json<CreateArchersPayload>,
 ) -> Result<impl IntoResponse> {
     // println!("Received {} {}", payload.first_name, payload.last_name);
+    if payload.archers.iter().any(|a| [0, 1].contains(&a.session)) {
+        return Ok((
+            StatusCode::FORBIDDEN,
+            Json("Registration closed").into_response(),
+        ));
+    }
+
     let total_price: u32 = payload.archers.iter().map(|a| a.class().price()).sum();
     let mail_data = EmailData {
         comment: payload.comment.clone(),
@@ -39,7 +46,7 @@ pub async fn create_archers(
     save.unwrap()?;
     mail?;
 
-    Ok((StatusCode::CREATED, Json(payload)))
+    Ok((StatusCode::CREATED, Json(payload).into_response()))
 }
 
 pub async fn list_archers() -> Result<impl IntoResponse> {
