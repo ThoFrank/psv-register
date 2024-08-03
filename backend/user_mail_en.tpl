@@ -1,6 +1,6 @@
 Hello {{name}},
 
-Thanks for your registration of {{club}} at PSV's Indoor tournament on March 3rd 2024.
+Thanks for your registration of {{club}} at PSV's Indoor tournament on Febraury, 23rd 2025.
 
 given comment:
 {{comment}}
@@ -22,7 +22,7 @@ If you registered for the waiting list, please do not pay before your place was 
 Total sum: {{total_price}}
 IBAN: DE97 1001 1001 2620 7749 14
 BIC: NTSBDEB1XXX
-Reason for payment: Indoor24 - {{club}}
+Reason for payment: Indoor25 - {{club}}
 
 Additional info can be found at https://bogen-psv.de/indoor.html
 

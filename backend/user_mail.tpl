@@ -1,6 +1,6 @@
 Hallo {{name}},
 
-vielen Dank für die Meldung für {{club}} zum PSV Indoor Turnier 2024 am 3.März.
+vielen Dank für die Meldung für {{club}} zum PSV Indoor Turnier 2025 am 23.Februar.
 
 angegebener Kommentar:
 {{comment}}
@@ -22,7 +22,7 @@ Falls ihr euch auf die Warteliste angemeldet habt, bitte erst nach Zusage bezahl
 Betrag: {{total_price}}
 IBAN: DE97 1001 1001 2620 7749 14
 BIC: NTSBDEB1XXX
-Verwendungszweck: Indoor24 - {{club}}
+Verwendungszweck: Indoor25 - {{club}}
 
 Weitere Informationen auf https://bogen-psv.de/indoor.html
 

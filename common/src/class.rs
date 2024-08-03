@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, IntoEnumIterator};
 
 lazy_static! {
-    pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+    pub static ref SEASON_START: NaiveDate = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
 }
 
 #[derive(
