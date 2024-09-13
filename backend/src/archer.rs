@@ -237,15 +237,15 @@ impl EmailArcher {
             },
             class: val.class().name(locale).into(),
             division: match val.class() {
-                R10 | R11 | R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | R40 | R41 | R12
-                | R13 | R14 | R15 => "Recurve",
+                RUE20M | RUE20W | RU15M | RU15W | RU13M | RU13W | RU11M | RU11W | RU18M | RU18W
+                | RU21M | RU21W | RUE49M | RUE49W | RUE67M | RUE67W => "Recurve",
 
-                B210 | B211 | B220 | B230 => match locale {
+                BUE20M | BUE20W | BU15 | BU21 => match locale {
                     common::locale::Locale::En => "Barebow",
                     common::locale::Locale::De => "Blank",
                 },
 
-                C110 | C111 | C120 | C130 | C112 | C113 | C114 | C115 => "Compound",
+                CUE20M | CUE20W | CU15 | CU21 | CUE49M | CUE49W | CUE67M | CUE67W => "Compound",
             }
             .into(),
             target: val.target_face().to_string(),

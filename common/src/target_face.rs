@@ -13,10 +13,10 @@ impl TargetFace {
         use Class::*;
         use TargetFace::*;
         match cls {
-            R24 | R25 | R22 | R23 => &[M18cm60],
-            R20 | R21 | C120 | B220 => &[M18cm60],
-            B210 | B211 | B230 => &[M18cm40],
-            C110 | C111 | C112 | C113 | C114 | C115 | C130 => &[M18Spot],
+            RU11M | RU11W | RU13M | RU13W => &[M18cm60],
+            RU15M | RU15W | CU15 | BU15 => &[M18cm60],
+            BUE20M | BUE20W | BU21 => &[M18cm40],
+            CUE20M | CUE20W | CUE49M | CUE49W | CUE67M | CUE67W | CU21 => &[M18Spot],
             _ => &[M18Spot, M18cm40],
         }
     }
