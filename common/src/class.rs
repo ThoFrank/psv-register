@@ -39,6 +39,8 @@ pub enum Class {
     R41,
     R12,
     R13,
+    R14,
+    R15,
     B210,
     B211,
     B220,
@@ -49,6 +51,8 @@ pub enum Class {
     C130,
     C112,
     C113,
+    C114,
+    C115,
 }
 
 impl Class {
@@ -67,8 +71,10 @@ impl Class {
                 Class::R31 => "Recurve 15-17 female",
                 Class::R40 => "Recurve 18-21 male",
                 Class::R41 => "Recurve 18-21 female",
-                Class::R12 => "Recurve 50+ male",
-                Class::R13 => "Recurve 50+ female",
+                Class::R12 => "Recurve 50-67 male",
+                Class::R13 => "Recurve 50-67 female",
+                Class::R14 => "Recurve 68+ male",
+                Class::R15 => "Recurve 68+ female",
                 Class::B210 => "Barebow Men",
                 Class::B211 => "Barebow Women",
                 Class::B220 => "Barebow 1-14 male/female",
@@ -77,8 +83,10 @@ impl Class {
                 Class::C111 => "Compound Women",
                 Class::C120 => "Compound 1-14 male/female",
                 Class::C130 => "Compound 15-20 male/female",
-                Class::C112 => "Compound 50+ male",
-                Class::C113 => "Compound 50+ female",
+                Class::C112 => "Compound 50-67 male",
+                Class::C113 => "Compound 50-67 female",
+                Class::C114 => "Compound 68+ male",
+                Class::C115 => "Compound 68+ female",
             },
             Locale::De => match self {
                 Class::R10 => "Recurve Herren",
@@ -95,6 +103,8 @@ impl Class {
                 Class::R41 => "Recurve Junioren w",
                 Class::R12 => "Recurve Master m",
                 Class::R13 => "Recurve Master w",
+                Class::R14 => "Recurve Senioren m",
+                Class::R15 => "Recurve Senioren w",
                 Class::B210 => "Blank Herren",
                 Class::B211 => "Blank Damen",
                 Class::B220 => "Blank Schüler m/w",
@@ -105,6 +115,8 @@ impl Class {
                 Class::C130 => "Compound Jugend/Junioren m/w",
                 Class::C112 => "Compound Master m",
                 Class::C113 => "Compound Master w",
+                Class::C114 => "Compound Senioren m",
+                Class::C115 => "Compound Senioren w",
             },
         }
     }
@@ -130,6 +142,8 @@ impl Class {
             Self::R41,
             Self::R12,
             Self::R13,
+            Self::R14,
+            Self::R15,
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
@@ -143,6 +157,8 @@ impl Class {
             Self::C130,
             Self::C112,
             Self::C113,
+            Self::C114,
+            Self::C115,
         ]
     }
     pub fn in_range(&self, dob: NaiveDate) -> bool {
@@ -159,15 +175,19 @@ impl Class {
             Class::R31 => (15, 17),
             Class::R40 => (18, 20),
             Class::R41 => (18, 20),
-            Class::R12 => (50, 120),
-            Class::R13 => (50, 120),
+            Class::R12 => (50, 67),
+            Class::R13 => (50, 67),
+            Class::R14 => (68, 120),
+            Class::R15 => (68, 120),
 
             Class::C110 => (21, 49),
             Class::C111 => (21, 49),
             Class::C120 => (1, 14),
             Class::C130 => (15, 20),
-            Class::C112 => (50, 120),
-            Class::C113 => (50, 120),
+            Class::C112 => (50, 67),
+            Class::C113 => (50, 67),
+            Class::C114 => (68, 120),
+            Class::C115 => (68, 120),
 
             Class::B210 => (21, 120),
             Class::B211 => (21, 120),
@@ -215,12 +235,16 @@ impl Class {
             // Junioren + Master => Herren/Damen
             R40 | R12 => &[R10],
             R41 | R13 => &[R11],
+            R14 => &[R12, R10],
+            R15 => &[R13, R11],
 
             B230 => &[B210, B211],
 
             C130 => &[C110, C111],
             C112 => &[C110],
             C113 => &[C111],
+            C114 => &[C112, C110],
+            C115 => &[C113, C111],
 
             _ => &[],
         }

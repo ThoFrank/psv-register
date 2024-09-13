@@ -238,14 +238,14 @@ impl EmailArcher {
             class: val.class().name(locale).into(),
             division: match val.class() {
                 R10 | R11 | R20 | R21 | R22 | R23 | R24 | R25 | R30 | R31 | R40 | R41 | R12
-                | R13 => "Recurve",
+                | R13 | R14 | R15 => "Recurve",
 
                 B210 | B211 | B220 | B230 => match locale {
                     common::locale::Locale::En => "Barebow",
                     common::locale::Locale::De => "Blank",
                 },
 
-                C110 | C111 | C120 | C130 | C112 | C113 => "Compound",
+                C110 | C111 | C120 | C130 | C112 | C113 | C114 | C115 => "Compound",
             }
             .into(),
             target: val.target_face().to_string(),
