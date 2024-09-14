@@ -39,8 +39,8 @@ pub enum Class {
     RU21W,
     RUE49M,
     RUE49W,
-    RUE67M,
-    RUE67W,
+    RUE65M,
+    RUE65W,
     BUE20M,
     BUE20W,
     BU15,
@@ -51,8 +51,8 @@ pub enum Class {
     CU21,
     CUE49M,
     CUE49W,
-    CUE67M,
-    CUE67W,
+    CUE65M,
+    CUE65W,
 }
 
 impl Class {
@@ -71,10 +71,10 @@ impl Class {
                 Class::RU18W => "Recurve 15-17 female",
                 Class::RU21M => "Recurve 18-20 male",
                 Class::RU21W => "Recurve 18-20 female",
-                Class::RUE49M => "Recurve 50-67 male",
-                Class::RUE49W => "Recurve 50-67 female",
-                Class::RUE67M => "Recurve 68+ male",
-                Class::RUE67W => "Recurve 68+ female",
+                Class::RUE49M => "Recurve 50-65 male",
+                Class::RUE49W => "Recurve 50-65 female",
+                Class::RUE65M => "Recurve 66+ male",
+                Class::RUE65W => "Recurve 66+ female",
                 Class::BUE20M => "Barebow Men",
                 Class::BUE20W => "Barebow Women",
                 Class::BU15 => "Barebow 1-14 male/female",
@@ -83,10 +83,10 @@ impl Class {
                 Class::CUE20W => "Compound Women",
                 Class::CU15 => "Compound 1-14 male/female",
                 Class::CU21 => "Compound 15-20 male/female",
-                Class::CUE49M => "Compound 50-67 male",
-                Class::CUE49W => "Compound 50-67 female",
-                Class::CUE67M => "Compound 68+ male",
-                Class::CUE67W => "Compound 68+ female",
+                Class::CUE49M => "Compound 50-65 male",
+                Class::CUE49W => "Compound 50-65 female",
+                Class::CUE65M => "Compound 66+ male",
+                Class::CUE65W => "Compound 66+ female",
             },
             Locale::De => match self {
                 Class::RUE20M => "Recurve Herren",
@@ -103,8 +103,8 @@ impl Class {
                 Class::RU21W => "Recurve Junioren w",
                 Class::RUE49M => "Recurve Master m",
                 Class::RUE49W => "Recurve Master w",
-                Class::RUE67M => "Recurve Senioren m",
-                Class::RUE67W => "Recurve Senioren w",
+                Class::RUE65M => "Recurve Senioren m",
+                Class::RUE65W => "Recurve Senioren w",
                 Class::BUE20M => "Blank Herren",
                 Class::BUE20W => "Blank Damen",
                 Class::BU15 => "Blank Schüler m/w",
@@ -115,8 +115,8 @@ impl Class {
                 Class::CU21 => "Compound Jugend/Junioren m/w",
                 Class::CUE49M => "Compound Master m",
                 Class::CUE49W => "Compound Master w",
-                Class::CUE67M => "Compound Senioren m",
-                Class::CUE67W => "Compound Senioren w",
+                Class::CUE65M => "Compound Senioren m",
+                Class::CUE65W => "Compound Senioren w",
             },
         }
     }
@@ -142,8 +142,8 @@ impl Class {
             Self::RU21W,
             Self::RUE49M,
             Self::RUE49W,
-            Self::RUE67M,
-            Self::RUE67W,
+            Self::RUE65M,
+            Self::RUE65W,
         ]
     }
     pub fn barebow_classes() -> &'static [Self] {
@@ -157,8 +157,8 @@ impl Class {
             Self::CU21,
             Self::CUE49M,
             Self::CUE49W,
-            Self::CUE67M,
-            Self::CUE67W,
+            Self::CUE65M,
+            Self::CUE65W,
         ]
     }
     pub fn in_range(&self, dob: NaiveDate) -> bool {
@@ -175,19 +175,19 @@ impl Class {
             Class::RU18W => (15, 17),
             Class::RU21M => (18, 20),
             Class::RU21W => (18, 20),
-            Class::RUE49M => (50, 67),
-            Class::RUE49W => (50, 67),
-            Class::RUE67M => (68, 120),
-            Class::RUE67W => (68, 120),
+            Class::RUE49M => (50, 65),
+            Class::RUE49W => (50, 65),
+            Class::RUE65M => (66, 120),
+            Class::RUE65W => (66, 120),
 
             Class::CUE20M => (21, 49),
             Class::CUE20W => (21, 49),
             Class::CU15 => (1, 14),
             Class::CU21 => (15, 20),
-            Class::CUE49M => (50, 67),
-            Class::CUE49W => (50, 67),
-            Class::CUE67M => (68, 120),
-            Class::CUE67W => (68, 120),
+            Class::CUE49M => (50, 65),
+            Class::CUE49W => (50, 65),
+            Class::CUE65M => (66, 120),
+            Class::CUE65W => (66, 120),
 
             Class::BUE20M => (21, 120),
             Class::BUE20W => (21, 120),
@@ -236,16 +236,16 @@ impl Class {
             // Junioren + Master => Herren/Damen
             RU21M | RUE49M => &[RUE20M],
             RU21W | RUE49W => &[RUE20W],
-            RUE67M => &[RUE49M, RUE20M],
-            RUE67W => &[RUE49W, RUE20W],
+            RUE65M => &[RUE49M, RUE20M],
+            RUE65W => &[RUE49W, RUE20W],
 
             BU21 => &[BUE20M, BUE20W],
 
             CU21 => &[CUE20M, CUE20W],
             CUE49M => &[CUE20M],
             CUE49W => &[CUE20W],
-            CUE67M => &[CUE49M, CUE20M],
-            CUE67W => &[CUE49W, CUE20W],
+            CUE65M => &[CUE49M, CUE20M],
+            CUE65W => &[CUE49W, CUE20W],
 
             _ => &[],
         }
@@ -282,8 +282,78 @@ impl Display for UnknownClassError {
 
 #[test]
 fn test_in_range() {
-    assert!(!Class::RUE20M.in_range(NaiveDate::from_ymd_opt(1975, 12, 31).unwrap()));
-    assert!(Class::RUE20M.in_range(NaiveDate::from_ymd_opt(1976, 1, 1).unwrap()));
-    assert!(Class::RUE20M.in_range(NaiveDate::from_ymd_opt(2004, 12, 31).unwrap()));
-    assert!(!Class::RUE20M.in_range(NaiveDate::from_ymd_opt(2005, 1, 1).unwrap()));
+    use chrono::Datelike;
+    let now_ = SEASON_START.year() - 1;
+    let died = SEASON_START.year() - 120;
+    let test_cases = std::collections::HashMap::from([
+        (Class::RUE20M, (1976, 2004)),
+        (Class::RUE20W, (1976, 2004)),
+        (Class::RU15M, (2011, 2012)),
+        (Class::RU15W, (2011, 2012)),
+        (Class::RU13M, (2013, 2014)),
+        (Class::RU13W, (2013, 2014)),
+        (Class::RU11M, (2015, now_)),
+        (Class::RU11W, (2015, now_)),
+        (Class::RU18M, (2008, 2010)),
+        (Class::RU18W, (2008, 2010)),
+        (Class::RU21M, (2005, 2007)),
+        (Class::RU21W, (2005, 2007)),
+        (Class::RUE49M, (1960, 1975)),
+        (Class::RUE49W, (1960, 1975)),
+        (Class::RUE65M, (died, 1959)),
+        (Class::RUE65W, (died, 1959)),
+        //
+        (Class::BUE20M, (died, 2004)),
+        (Class::BUE20W, (died, 2004)),
+        (Class::BU15, (2011, now_)),
+        (Class::BU21, (2005, 2010)),
+        //
+        (Class::CUE20M, (1976, 2004)),
+        (Class::CUE20W, (1976, 2004)),
+        (Class::CU15, (2011, now_)),
+        (Class::CU21, (2005, 2010)),
+        (Class::CUE49M, (1960, 1975)),
+        (Class::CUE49W, (1960, 1975)),
+        (Class::CUE65M, (died, 1959)),
+        (Class::CUE65W, (died, 1959)),
+    ]);
+
+    for cls in Class::iter() {
+        let range = test_cases[&cls];
+        let lower_out = NaiveDate::from_ymd_opt(range.0 - 1, 12, 31).unwrap();
+        let lower_in = NaiveDate::from_ymd_opt(range.0, 1, 1).unwrap();
+        let upper_in = NaiveDate::from_ymd_opt(range.1, 12, 31).unwrap();
+        let upper_out = NaiveDate::from_ymd_opt(range.1 + 1, 1, 1).unwrap();
+
+        println!("{}", lower_out);
+        println!("{}", lower_in);
+        println!("{}", upper_in);
+        println!("{}", upper_out);
+        println!();
+
+        assert!(
+            !cls.in_range(lower_out),
+            "Lower out bound not respected for {}: {}",
+            cls,
+            lower_out
+        );
+        assert!(
+            cls.in_range(lower_in),
+            "Lower in bound not respected for {}: {}",
+            cls,
+            lower_in
+        );
+        assert!(
+            cls.in_range(upper_in),
+            "Upper in bound not respected for {}: {}",
+            cls,
+            upper_in
+        );
+        assert!(
+            !cls.in_range(upper_out),
+            "Upper out bound not respected for {}: {}",
+            cls,
+            upper_out
+        );
+    }
 }

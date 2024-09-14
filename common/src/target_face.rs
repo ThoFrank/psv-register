@@ -16,7 +16,7 @@ impl TargetFace {
             RU11M | RU11W | RU13M | RU13W => &[M18cm60],
             RU15M | RU15W | CU15 | BU15 => &[M18cm60],
             BUE20M | BUE20W | BU21 => &[M18cm40],
-            CUE20M | CUE20W | CUE49M | CUE49W | CUE67M | CUE67W | CU21 => &[M18Spot],
+            CUE20M | CUE20W | CUE49M | CUE49W | CUE65M | CUE65W | CU21 => &[M18Spot],
             _ => &[M18Spot, M18cm40],
         }
     }
