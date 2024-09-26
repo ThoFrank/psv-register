@@ -297,7 +297,7 @@ fn view_footer() -> Node<Msg> {
         ),
         " - ",
         a!(
-            attrs!(At::Href => "https://bogen-psv.de/impressum.html"),
+            attrs!(At::Href => "https://bogen-psv.de/impressum_small.html"),
             t!("legal notice")
         )
     ]
