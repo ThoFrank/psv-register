@@ -292,7 +292,7 @@ fn view_headline() -> Vec<Node<Msg>> {
 fn view_footer() -> Node<Msg> {
     footer![
         a!(
-            attrs!(At::Href => "https://bogen-psv.de/datenschutz.html"),
+            attrs!(At::Href => "https://bogen-psv.de/datenschutz_small.html"),
             t!("privacy policy")
         ),
         " - ",
