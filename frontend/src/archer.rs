@@ -62,8 +62,7 @@ impl ArcherModel {
             .contains(&self.selected_target_face)
         {
             self.selected_target_face = *self
-                .possible_target_faces
-                .get(0)
+                .possible_target_faces.first()
                 .unwrap_or(&TargetFace::M18Spot);
         }
     }
@@ -76,7 +75,7 @@ impl ArcherModel {
             DoB::Invalid(_) => Vec::new(),
         };
 
-        let new_cls = match (self.cls, available_classes.get(0)) {
+        let new_cls = match (self.cls, available_classes.first()) {
             (Some(cls), Some(&new)) => {
                 if available_classes.contains(&cls) {
                     return;
