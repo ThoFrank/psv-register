@@ -55,7 +55,7 @@ pub async fn list_archers() -> Result<impl IntoResponse> {
 }
 
 fn save_archer(archer: Archer) -> Result<()> {
-    let mut connection = crate::db::establish_connection();
+    let mut connection = crate::db::establish_connection(&CONFIG.read().database_path);
     connection.transaction(|conn| -> Result<()> {
         let inserted_bib: i32 = diesel::insert_into(schema::archers::table)
             .values(crate::models::InsertableArcher {
@@ -139,7 +139,10 @@ async fn send_registration_mail(
             "indoor@bogen-psv.de".parse().unwrap(),
         ))
         .header(lettre::message::header::ContentType::TEXT_PLAIN)
-        .subject(&CONFIG.read().mail_message.subject)
+        .subject(match locale {
+            common::locale::Locale::En => "Registration Confirmation PSV Indoor",
+            common::locale::Locale::De => "Anmeldebestätigung PSV Indoor",
+        })
         .body(
             HANDLEBARS
                 .read()
@@ -166,7 +169,7 @@ async fn send_registration_mail(
 fn get_archers() -> Result<Vec<RegisteredArcher>> {
     use crate::models::*;
     use crate::schema::archers::dsl::*;
-    let mut connection = crate::db::establish_connection();
+    let mut connection = crate::db::establish_connection(&CONFIG.read().database_path);
     let ret = archers.load::<Archer>(&mut connection)?;
 
     Ok(ret.into_iter().map(|a| a.into()).collect())
